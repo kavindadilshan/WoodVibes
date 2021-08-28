@@ -22,7 +22,7 @@ export const callApi = async (apiObject) => {
         'Content-Type': apiObject.urlencoded ? 'application/x-www-form-urlencoded' : apiObject.multipart ? 'multipart/form-data' : 'application/json',
     };
     if (apiObject.authentication) {
-        let access_token = AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);
+        let access_token =await AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);
         if (access_token) {
             headers.Authorization = `Bearer ${access_token}`;
         }
@@ -114,15 +114,15 @@ const renewTokenHandler = async (apiObject) => {
     let result;
     // renew token - start
     const obj = {
-        refresh_token: AsyncStorage.getItem(StorageStrings.REFRESH_TOKEN),
+        refresh_token: await AsyncStorage.getItem(StorageStrings.REFRESH_TOKEN),
         grant_type: 'refresh_token',
         user_type: 'ADMIN'
     };
     await authService.renewToken(qs.stringify(obj))
         .then(async response => {
             if (response.access_token) {
-                AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.access_token);
-                AsyncStorage.setItem(StorageStrings.REFRESH_TOKEN, response.refresh_token);
+                await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.access_token);
+                await AsyncStorage.setItem(StorageStrings.REFRESH_TOKEN, response.refresh_token);
                 result = await callApi(apiObject);
             } else {
                 result = await response;
