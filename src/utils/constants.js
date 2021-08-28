@@ -13,3 +13,12 @@ export const COLORS = {
 };
 export const APP_NAME = 'WoodVibe';
 export const AGENT_CONTACT = '0702177781';
+export const CLIENT_NAME = 'admin';
+export const CLIENT_SECRET = '';
+
+export const StorageStrings={
+  LOGGED:'LOGGED',
+  ACCESS_TOKEN:'ACCESS_TOKEN',
+  REFRESH_TOKEN:'REFRESH_TOKEN',
+  USERID:'USERID',
+}
