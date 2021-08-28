@@ -1,0 +1,155 @@
+import axios from 'axios';
+import apiConfig from './apiConfig';
+import {StorageStrings} from "../utils/constants";
+import * as authService from "./auth";
+import * as commonFunc from "../utils/commonFunc";
+import qs from "qs";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+import * as constants from "../utils/constants";
+
+
+export const callApi = async (apiObject) => {
+    let body = {};
+    let headers;
+    let method = apiObject.method ? apiObject.method.toLowerCase() : 'get';
+
+    if (method === 'post' || method === 'put' || method === 'patch') {
+        body = apiObject.body ? apiObject.body : {};
+    }
+
+    headers = {
+        'Content-Type': apiObject.urlencoded ? 'application/x-www-form-urlencoded' : apiObject.multipart ? 'multipart/form-data' : 'application/json',
+    };
+    if (apiObject.authentication) {
+        let access_token = AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);
+        if (access_token) {
+            headers.Authorization = `Bearer ${access_token}`;
+        }
+    }
+    if (apiObject.isBasicAuth) {
+        headers.Authorization = 'Basic ' + btoa('' + constants.CLIENT_NAME + ':' + constants.CLIENT_SECRET + '');
+    }
+
+
+    const url = `${apiConfig.serverUrl}/${apiConfig.basePath}/${apiObject.endpoint}`;
+    let result;
+
+    await axios[method](url, method !== 'get' ? body : {headers: headers}, {headers: headers})
+        .then(async response => {
+            if (!response.data.success) {
+                let code = response.data.code;
+                if (code === 470 || code === 471) {
+                    await commonFunc.clearLocalStorage();
+                    //navigations
+                }
+            }
+            result = await {...response.data, status: response.data.success ? 1 : 0};
+        })
+        .catch(async error => {
+
+            if (error !== undefined) {
+                if (error.response === undefined) {
+                    result = await {
+                        success: false,
+                        status: 2,
+                        message: "Your connection was interrupted",
+                        data: null,
+                    }
+                } else if (error.response.status === 401) {
+
+                    if (apiObject.state === "renewToken") {
+                        result = await {success: false, status: 2, message: error.response.data.message};
+                        return;
+                    }
+                    if (apiObject.state === "login") {
+                        result = await {success: false, status: 0, message: error.response.data.message};
+                        return;
+                    }
+                    result = await renewTokenHandler(apiObject);
+
+                } else if (error.response.status === 403) {
+                    result = await {
+                        success: false,
+                        status: 2,
+                        message: "Access is denied.",
+                        data: null,
+                    };
+                } else if (error.response.status === 417) {
+                    result = await {
+                        success: false,
+                        status: 2,
+                        message: "Oops! Something went wrong.",
+                        data: null,
+                    };
+                } else if (error.response.data !== undefined) {
+                    result = await {
+                        success: false,
+                        status: 0,
+                        message: error.response.data.message,
+                        data: null,
+                    }
+                } else {
+                    result = await {
+                        success: false,
+                        status: 2,
+                        message: "Sorry, something went wrong.",
+                        data: null,
+                    };
+                }
+            } else {
+                result = await {
+                    success: false,
+                    status: 2,
+                    message: "Your connection was interrupted!",
+                    data: null,
+                };
+            }
+        });
+
+    return result;
+};
+
+const renewTokenHandler = async (apiObject) => {
+    let result;
+    // renew token - start
+    const obj = {
+        refresh_token: AsyncStorage.getItem(StorageStrings.REFRESH_TOKEN),
+        grant_type: 'refresh_token',
+        user_type: 'ADMIN'
+    };
+    await authService.renewToken(qs.stringify(obj))
+        .then(async response => {
+            if (response.access_token) {
+                AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.access_token);
+                AsyncStorage.setItem(StorageStrings.REFRESH_TOKEN, response.refresh_token);
+                result = await callApi(apiObject);
+            } else {
+                result = await response;
+                Toast.show({
+                    type: 'error',
+                    position: 'top',
+                    text1: response.message,
+                    visibilityTime: 4000,
+                    autoHide: true,
+                    topOffset: 30,
+                    bottomOffset: 40,
+                    ref: ''
+                })
+                    .then((value) => {
+                        switch (value) {
+                            case "action":
+                                commonFunc.clearLocalStorage();
+                                //login navigation
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+            }
+        });
+    // renew token - end
+    return result;
+};
+
+export default {callApi, renewTokenHandler};
