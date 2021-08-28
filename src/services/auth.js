@@ -28,7 +28,7 @@ export async function renewToken(token) {
 export async function registerUser(body){
     const apiObject = {};
     apiObject.method = 'POST';
-    apiObject.authentication = true;
+    apiObject.authentication = false;
     apiObject.isBasicAuth = false;
     apiObject.urlencoded = false;
     apiObject.endpoint = `user/add`;
