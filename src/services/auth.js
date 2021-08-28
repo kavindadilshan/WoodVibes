@@ -4,8 +4,8 @@ export async function loginUser(userCredentials){
     const apiObject={};
     apiObject.method = 'POST';
     apiObject.authentication = false;
-    apiObject.isBasicAuth = true;
-    apiObject.urlencoded = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
     apiObject.endpoint = '/authenticate';
     apiObject.body = userCredentials;
     apiObject.state = "login";
@@ -17,9 +17,9 @@ export async function renewToken(token) {
     const apiObject = {};
     apiObject.method = 'POST';
     apiObject.authentication = false;
-    apiObject.isBasicAuth = true;
-    apiObject.urlencoded = true;
-    apiObject.endpoint = 'oauth/token';
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = '';
     apiObject.body = token;
     apiObject.state = "renewToken";
     return await ApiService.callApi(apiObject);
