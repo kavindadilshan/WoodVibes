@@ -32,9 +32,9 @@ const LoginBase = ({navigation}) => {
 
     const loginOnPress = async () => {
         // do login logic
-        // let response = await loginUser(dispatch, {email, password});
-        // if (!response.user) return
-        setLoading(!loading);
+        let response = await loginUser(dispatch, {email, password});
+        if (!response.user) return
+        // setLoading(!loading);
     }
 
     const loginHandler = async () => {
