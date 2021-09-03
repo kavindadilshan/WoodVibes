@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IconI from 'react-native-vector-icons/Ionicons';
 
 import LoginScreen from '../screens/login/base';
+import RegisterScreen from '../screens/register/base';
 import HomeScreen from '../screens/home/base';
 import CustomersScreen from '../screens/customers/base';
 import WoodSetupScreen from '../screens/woodSetup/base';
@@ -44,7 +45,7 @@ const AppStack = () => (
           : 'calculator-outline';
           size = 27;
         }
-  
+
         return <IconI name={iconName} size={size} color={color}     />;
       },
     })}
@@ -64,7 +65,7 @@ const AppStack = () => (
 const AppNavigator = () => {
 
     const userDetails = useAuthState()
-  
+
     return (
       <NavigationContainer>
         <Stack.Navigator
@@ -73,14 +74,17 @@ const AppNavigator = () => {
             headerShown: false
           }}>
           { userDetails.token == "" ? (
-            <Stack.Screen name="Login" component={LoginScreen} />
+              <>
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Register" component={RegisterScreen} />
+              </>
           ) : (
             <>
               <Stack.Screen name="AppStack" component={AppStack} />
               <Stack.Screen name="Profile" component={ProfileScreen} />
               <Stack.Screen name="About" component={AboutScreen} />
             </>
-          )}          
+          )}
         </Stack.Navigator>
       </NavigationContainer>
     );
