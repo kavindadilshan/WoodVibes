@@ -66,7 +66,7 @@ export const callApi = async (apiObject) => {
                         result = await {success: false, status: 0, message: error.response.data.message};
                         return;
                     }
-                    result = await renewTokenHandler(apiObject);
+                    // result = await renewTokenHandler(apiObject);
 
                 } else if (error.response.status === 403) {
                     result = await {
@@ -121,7 +121,7 @@ const renewTokenHandler = async (apiObject) => {
     await authService.renewToken(qs.stringify(obj))
         .then(async response => {
             if (response.access_token) {
-                await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.access_token);
+                await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
                 await AsyncStorage.setItem(StorageStrings.REFRESH_TOKEN, response.refresh_token);
                 result = await callApi(apiObject);
             } else {

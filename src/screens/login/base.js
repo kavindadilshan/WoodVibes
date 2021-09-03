@@ -27,7 +27,8 @@ const LoginBase = ({navigation}) => {
     }
 
     const registerOnPress = () => {
-        setRegisterVisible(!registerVisible)
+        // setRegisterVisible(!registerVisible)
+        navigation.navigate('Register')
     }
 
     const loginOnPress = async () => {
@@ -35,6 +36,7 @@ const LoginBase = ({navigation}) => {
         let response = await loginUser(dispatch, {email, password});
         if (!response.user) return
         // setLoading(!loading);
+        // loginHandler();
     }
 
     const loginHandler = async () => {
@@ -42,21 +44,20 @@ const LoginBase = ({navigation}) => {
             username: email,
             password: password
         }
-        await authService.loginUser(qs.stringify(data))
+        await authService.loginUser(data)
             .then(response => {
                 if (response.token) {
                     AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
-                    AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId);
-
-                }
-                if (!response.success) {
+                    AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
+                    alert(JSON.stringify(response))
+                } else {
                     commonFunc.notifyMessage(response.message, 0);
                 }
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
             })
-        setLoading(!loading);
+        // setLoading(!loading);
     }
 
     return (
@@ -123,7 +124,8 @@ const LoginBase = ({navigation}) => {
                     containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.2)'}}>
                     <View style={styles.bottomSheetContainer}>
                         <Text style={styles.bottomSheetTitle}>Forget Password!</Text>
-                        <Text style={styles.bottomSheetText}>Please contact our agent through {Constants.AGENT_CONTACT} to
+                        <Text style={styles.bottomSheetText}>Please contact our agent
+                            through {Constants.AGENT_CONTACT} to
                             reset your password</Text>
                         <Button
                             title="Close"
@@ -139,7 +141,8 @@ const LoginBase = ({navigation}) => {
                     containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.2)'}}>
                     <View style={styles.bottomSheetContainer}>
                         <Text style={styles.bottomSheetTitle}>Join with us!</Text>
-                        <Text style={styles.bottomSheetText}>Please contact our agent through {Constants.AGENT_CONTACT} to
+                        <Text style={styles.bottomSheetText}>Please contact our agent
+                            through {Constants.AGENT_CONTACT} to
                             register</Text>
                         <Button
                             title="Close"
