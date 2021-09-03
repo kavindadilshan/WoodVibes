@@ -3,10 +3,12 @@ import {ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View} from 
 import {BottomSheet, Button, Image, Input} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/SimpleLineIcons';
 import * as authService from '../../services/auth';
+import * as Validation from '../../utils/validation';
 import qs from 'qs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as commonFunc from '../../utils/commonFunc';
 import Loading from '../../components/loading';
+import TextInput from '../../components/textInput';
 
 import * as Constants from '../../utils/constants';
 import {loginUser, useAuthDispatch} from '../../context';
@@ -18,8 +20,8 @@ const LoginBase = ({navigation}) => {
 
     const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
     const [registerVisible, setRegisterVisible] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState({value: '', valid: true});
+    const [password, setPassword] = useState({value: '', valid: true});
     const [loading, setLoading] = useState(false);
 
     const forgotPasswordOnPress = () => {
@@ -32,11 +34,22 @@ const LoginBase = ({navigation}) => {
     }
 
     const loginOnPress = async () => {
-        // do login logic
-        let response = await loginUser(dispatch, {email, password});
-        if (!response.user) return
-        // setLoading(!loading);
-        // loginHandler();
+
+        email.valid = Validation.textFieldValidator(email.value.trim(), 1);
+        password.valid = Validation.textFieldValidator(password.value.trim(), 1);
+        setEmail({value: email.value, valid: email.valid});
+        setPassword({value: password.value, valid: password.valid});
+
+        console.log(JSON.stringify(email))
+        console.log(JSON.stringify(password))
+
+        if (email.valid && password.valid) {
+            let response = await loginUser(dispatch, {email, password});
+            if (!response.user) return
+            // setLoading(!loading);
+            // loginHandler();
+        }
+
     }
 
     const loginHandler = async () => {
@@ -69,11 +82,8 @@ const LoginBase = ({navigation}) => {
                         style={styles.logo}
                         PlaceholderContent={<ActivityIndicator/>}/>
                     <Text style={styles.title}>Welcome to {Constants.APP_NAME}</Text>
-                    <Input
-                        placeholder="Username"
-                        placeholderTextColor={Constants.COLORS.PLACEHOLDER_ASH}
-                        containerStyle={styles.inputContainerStyle}
-                        inputContainerStyle={{borderBottomWidth: 0}}
+                    <TextInput
+                        placeholder={"Username"}
                         leftIcon={
                             <Icon
                                 name='user'
@@ -81,14 +91,13 @@ const LoginBase = ({navigation}) => {
                                 color={Constants.COLORS.PLACEHOLDER_ASH}
                             />
                         }
-                        onChangeText={value => setEmail(value)}
+                        value={email.value}
+                        onChangeText={value => setEmail({value: value, valid: true})}
+                        errorMessage={!email.valid ? 'Please Enter Username' : null}
                     />
-                    <Input
-                        placeholder="Password"
+                    <TextInput
+                        placeholder={"Password"}
                         secureTextEntry={true}
-                        placeholderTextColor={Constants.COLORS.PLACEHOLDER_ASH}
-                        containerStyle={styles.inputContainerStyle}
-                        inputContainerStyle={{borderBottomWidth: 0}}
                         leftIcon={
                             <Icon
                                 name='lock'
@@ -96,7 +105,9 @@ const LoginBase = ({navigation}) => {
                                 color={Constants.COLORS.PLACEHOLDER_ASH}
                             />
                         }
-                        onChangeText={value => setPassword(value)}
+                        value={password.value}
+                        onChangeText={value => setPassword({value: value, valid: true})}
+                        errorMessage={!password.valid ? 'Please Enter Password' : null}
                     />
                     <Text
                         onPress={forgotPasswordOnPress}
