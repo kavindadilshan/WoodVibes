@@ -57,7 +57,7 @@ const AppStack = () => (
     >
         <Stack.Screen name="Home" component={HomeScreen}/>
         <Stack.Screen name="Customers" component={CustomersScreen}/>
-        <Stack.Screen name="Approve" component={ApproveScreen}/>
+        {/*<Stack.Screen name="Approve" component={ApproveScreen}/>*/}
         <Stack.Screen name="WoodSetup" component={WoodSetupScreen}/>
     </Tab.Navigator>
 );
