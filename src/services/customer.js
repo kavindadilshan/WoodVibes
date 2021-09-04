@@ -6,7 +6,7 @@ export async function addCustomer(body){
     apiObject.authentication = true;
     apiObject.isBasicAuth = false;
     apiObject.urlencoded = false;
-    apiObject.endpoint = `customer/add`;
+    apiObject.endpoint = `api/customer/add`;
     apiObject.multipart = false;
     apiObject.body = body;
     return await ApiService.callApi(apiObject);

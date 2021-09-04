@@ -14,7 +14,9 @@ const HomeBase = ({navigation}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
     const [selectedLanguage, setSelectedLanguage] = useState();
     const [selectedWoodTypeId, setSelectedWoodTypeId] = useState('');
-    const [selectedWoodDetails,setSelectedWoodDetails] =useState({});
+    const [selectedWoodDetails, setSelectedWoodDetails] = useState({});
+    const [length, setLength] = useState();
+    const [circumference, setCircumference] = useState();
 
     useEffect(async () => {
         await getWoodTypeLists();
@@ -122,7 +124,8 @@ const HomeBase = ({navigation}) => {
                             <Text>Unit price</Text>
                             <Text style={{fontFamily: 'Amalee'}}>ඒකක මිල</Text>
                         </View>
-                        <Text style={{fontSize: 20}}>Rs. {selectedWoodDetails.cost?selectedWoodDetails.cost:0}</Text>
+                        <Text
+                            style={{fontSize: 20}}>Rs. {selectedWoodDetails.cost ? selectedWoodDetails.cost : 0}</Text>
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
@@ -135,11 +138,13 @@ const HomeBase = ({navigation}) => {
                             textAlign={'right'}
                             placeholder='Enter here...'
                             keyboardType='decimal-pad'
+                            value={length}
+                            onChange={value => setLength(value)}
                         />
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
-                            <Text>Circum ference (inches)</Text>
+                            <Text>Circumference (inches)</Text>
                             <Text style={{fontFamily: 'Amalee'}}>වට ප්‍රමාණය (අඟල්)</Text>
                         </View>
                         <Input
@@ -148,6 +153,8 @@ const HomeBase = ({navigation}) => {
                             textAlign={'right'}
                             placeholder='Enter here...'
                             keyboardType='decimal-pad'
+                            value={circumference}
+                            onChange={value => setCircumference(value)}
                         />
                     </View>
                     <View style={styles.cardTotalConatiner}>

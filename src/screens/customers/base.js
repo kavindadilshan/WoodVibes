@@ -1,29 +1,41 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import {ScrollView, StyleSheet, Text, View} from 'react-native';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 import IconI from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Validation from '../../utils/validation';
 
 import * as Constants from '../../utils/constants';
 import TabHeader from '../../components/tabHeader';
 import * as customerService from '../../services/customer';
 import * as commonFunc from "../../utils/commonFunc";
+import {StorageStrings} from "../../utils/constants";
 
 const CustomerBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
-    const [idType, setIdType] = useState('');
-    const [identityNo, setIdentityNo] = useState('');
+    const [idType, setIdType] = useState('1');
+    const [idNumber, setIdNumber] = useState('');
     const [factoryId, setFactoryId] = useState('');
 
     const toggleOverlay = () => {
         setVisible(!visible);
     };
 
-    const addOnPress = () => {
-        setVisible(false);
-        // do logic
+    const addOnPress = async () => {
+        if (!Validation.textFieldValidator(name.trim(),1)){
+            commonFunc.notifyMessage('Please Enter Name', 2);
+        }else if (!Validation.nicValidator(idNumber.trim())){
+            commonFunc.notifyMessage('Please Enter Correct NIC', 2);
+        }else if (!Validation.mobileNumberValidator(mobile.trim())){
+            commonFunc.notifyMessage('Please Enter Correct Mobile Number', 2);
+        }else {
+            setVisible(true);
+            await customerAddHandler();
+        }
+
     };
 
     const customerAddHandler = async () => {
@@ -31,12 +43,13 @@ const CustomerBase = ({navigation}) => {
             name: name,
             mobile: mobile,
             idType: idType,
-            identityNo: identityNo,
-            factoryId: factoryId
+            identityNo: idNumber,
+            factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID)
         }
         await customerService.addCustomer(data)
             .then(res => {
                 setVisible(false);
+                commonFunc.notifyMessage("Customer has been successfully created!", 0);
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
@@ -56,34 +69,37 @@ const CustomerBase = ({navigation}) => {
     return (
         <View style={styles.container}>
             <TabHeader title="Customers" rightComponent={headerRightBtn}/>
-            <Card containerStyle={styles.listCard}>
-                <Card.Title style={styles.listCardTitle}>
-                    J.J.Gamage
-                </Card.Title>
-                <Card.Divider/>
-                <View style={styles.listCardItem}>
-                    <Text style={styles.listCardItemHeader}>Total Orders</Text>
-                    <Text style={styles.listCardItemDesc}>4</Text>
-                </View>
-                <View style={styles.listCardItem}>
-                    <Text style={styles.listCardItemHeader}>Last Order</Text>
-                    <Text style={styles.listCardItemDesc}>2021-10-21</Text>
-                </View>
-            </Card>
-            <Card containerStyle={styles.listCard}>
-                <Card.Title style={styles.listCardTitle}>
-                    J.J.Gamage
-                </Card.Title>
-                <Card.Divider/>
-                <View style={styles.listCardItem}>
-                    <Text style={styles.listCardItemHeader}>Total Orders</Text>
-                    <Text style={styles.listCardItemDesc}>4</Text>
-                </View>
-                <View style={styles.listCardItem}>
-                    <Text style={styles.listCardItemHeader}>Last Order</Text>
-                    <Text style={styles.listCardItemDesc}>2021-10-21</Text>
-                </View>
-            </Card>
+            <ScrollView>
+                <Card containerStyle={styles.listCard}>
+                    <Card.Title style={styles.listCardTitle}>
+                        J.J.Gamage
+                    </Card.Title>
+                    <Card.Divider/>
+                    <View style={styles.listCardItem}>
+                        <Text style={styles.listCardItemHeader}>Total Orders</Text>
+                        <Text style={styles.listCardItemDesc}>4</Text>
+                    </View>
+                    <View style={styles.listCardItem}>
+                        <Text style={styles.listCardItemHeader}>Last Order</Text>
+                        <Text style={styles.listCardItemDesc}>2021-10-21</Text>
+                    </View>
+                </Card>
+                <Card containerStyle={styles.listCard}>
+                    <Card.Title style={styles.listCardTitle}>
+                        J.J.Gamage
+                    </Card.Title>
+                    <Card.Divider/>
+                    <View style={styles.listCardItem}>
+                        <Text style={styles.listCardItemHeader}>Total Orders</Text>
+                        <Text style={styles.listCardItemDesc}>4</Text>
+                    </View>
+                    <View style={styles.listCardItem}>
+                        <Text style={styles.listCardItemHeader}>Last Order</Text>
+                        <Text style={styles.listCardItemDesc}>2021-10-21</Text>
+                    </View>
+                </Card>
+            </ScrollView>
+
 
             <Overlay
                 isVisible={visible}
@@ -116,8 +132,8 @@ const CustomerBase = ({navigation}) => {
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
                             placeholder="Enter here..."
-                            value={identityNo}
-                            onChange={val => setIdentityNo(val)}
+                            value={idNumber}
+                            onChangeText={val => setIdNumber(val)}
                         />
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -151,7 +167,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
-        paddingBottom: 100,
     },
     addNewButtonContainerStyle: {
         borderRadius: 10,
@@ -203,7 +218,7 @@ const styles = StyleSheet.create({
     inputContainerStyle: {
         backgroundColor: Constants.COLORS.WHITE,
         width: '55%',
-        height: 35,
+        height: 45,
         borderRadius: 10,
     },
     cardTotalConatiner: {
