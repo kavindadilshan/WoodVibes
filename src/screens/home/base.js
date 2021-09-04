@@ -5,6 +5,8 @@ import { Picker } from '@react-native-picker/picker';
 import { Button, Card, Divider, Input } from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {StorageStrings} from "../../utils/constants";
 
 const HomeBase = ({navigation}) => {
 
@@ -14,8 +16,8 @@ const HomeBase = ({navigation}) => {
     // do logic
   }
 
-  const profileOnPress = () => {
-    navigation.navigate('Profile')
+  const profileOnPress =async () => {
+    await AsyncStorage.clear();
   }
 
   const aboutOnPress = () => {
@@ -258,7 +260,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   listItemHeader: {
-    
+
   },
   listItemHeaderItem: {
     marginBottom: 5,
@@ -287,7 +289,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch'
   },
   listItemBody: {
-    
+
   },
   listItemBodyItem: {
     flexDirection: 'row',
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   listItemCloseIcon: {
-    
+
   },
 });
 

@@ -13,6 +13,7 @@ import TextInput from '../../components/textInput';
 import * as Constants from '../../utils/constants';
 import {loginUser, useAuthDispatch} from '../../context';
 import {StorageStrings} from "../../utils/constants";
+import {CommonActions} from "@react-navigation/native";
 
 const LoginBase = ({navigation}) => {
 
@@ -29,8 +30,8 @@ const LoginBase = ({navigation}) => {
     }
 
     const registerOnPress = () => {
-        // setRegisterVisible(!registerVisible)
-        navigation.navigate('Register')
+        setRegisterVisible(!registerVisible)
+        // navigation.navigate('Register')
     }
 
     const loginOnPress = async () => {
@@ -40,29 +41,32 @@ const LoginBase = ({navigation}) => {
         setEmail({value: email.value, valid: email.valid});
         setPassword({value: password.value, valid: password.valid});
 
-        console.log(JSON.stringify(email))
-        console.log(JSON.stringify(password))
-
         if (email.valid && password.valid) {
-            let response = await loginUser(dispatch, {email, password});
-            if (!response.user) return
-            // setLoading(!loading);
-            // loginHandler();
+            setLoading(!loading);
+            await loginHandler();
         }
 
     }
 
     const loginHandler = async () => {
-        const data = {
-            username: email,
-            password: password
+        let data = {
+            username: email.value,
+            password: password.value
         }
         await authService.loginUser(data)
-            .then(response => {
+            .then(async response => {
                 if (response.token) {
-                    AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
-                    AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
-                    alert(JSON.stringify(response))
+                    await AsyncStorage.setItem(StorageStrings.LOGGED, 'true');
+                    await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
+                    await AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
+                    navigation.dispatch(
+                        CommonActions.reset({
+                            index: 1,
+                            routes: [
+                                {name: 'AppStack'},
+                            ],
+                        })
+                    );
                 } else {
                     commonFunc.notifyMessage(response.message, 0);
                 }
@@ -70,7 +74,7 @@ const LoginBase = ({navigation}) => {
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
             })
-        // setLoading(!loading);
+        setLoading(false);
     }
 
     return (
