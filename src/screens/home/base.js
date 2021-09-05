@@ -31,6 +31,7 @@ const HomeBase = ({navigation}) => {
     const [tableLoading, setTableLoading] = useState(false);
     const [customerList, setCustomerList] = useState([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState();
+    const [asChanged,setAsChanged]=useState(false);
 
     useEffect(async () => {
         await getWoodTypeLists();
@@ -66,19 +67,22 @@ const HomeBase = ({navigation}) => {
         } else if (circumference === undefined || circumference === '') {
             commonFunc.notifyMessage('Please Enter Circumference', 2);
         } else {
-            const cubicQuantity = length * circumference;
-            const totalValue = (selectedWoodDetails.cost * cubicQuantity).toFixed();
-            setTotalAmount(totalValue.toString());
-            setNetAmount(totalValue.toString());
-            setEditable(true);
-            setDiscount('')
-            const list = addingList;
-            list.push({
-                cubicQuantity: cubicQuantity,
-                unitPrice: selectedWoodDetails.cost,
-                totalAmount: totalValue
-            })
-            setAddingList(list);
+            if (asChanged){
+                const cubicQuantity = length * circumference;
+                const totalValue = (selectedWoodDetails.cost * cubicQuantity).toFixed();
+                setTotalAmount(totalValue.toString());
+                setNetAmount(totalValue.toString());
+                setEditable(true);
+                setDiscount('')
+                const list = addingList;
+                list.push({
+                    cubicQuantity: cubicQuantity,
+                    unitPrice: selectedWoodDetails.cost,
+                    totalAmount: totalValue
+                })
+                setAddingList(list);
+                setAsChanged(false);
+            }
         }
     }
 
@@ -212,7 +216,7 @@ const HomeBase = ({navigation}) => {
                                         placeholder='Enter here...'
                                         keyboardType='decimal-pad'
                                         value={length}
-                                        onChangeText={val => setLength(val)}
+                                        onChangeText={val => {setLength(val);setAsChanged(true)}}
                                     />
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -227,7 +231,7 @@ const HomeBase = ({navigation}) => {
                                         placeholder='Enter here...'
                                         keyboardType='decimal-pad'
                                         value={circumference}
-                                        onChangeText={val => setCircumference(val)}
+                                        onChangeText={val => {setCircumference(val);setAsChanged(true)}}
                                     />
                                 </View>
                                 <Button
