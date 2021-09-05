@@ -8,6 +8,7 @@ import * as Constants from '../../utils/constants';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {StorageStrings} from "../../utils/constants";
 import * as WoodServices from '../../services/wood';
+import * as CustomerServices from '../../services/customer';
 import * as commonFunc from "../../utils/commonFunc";
 import {add} from "react-native-reanimated";
 
@@ -50,9 +51,20 @@ const HomeBase = ({navigation}) => {
 
     async function getAllCustomersList() {
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
-        await WoodServices.getAllCustomers(factoryId)
+        await CustomerServices.getAllCustomers(factoryId)
             .then(response => {
                 setCustomerList(response.customers);
+            })
+            .catch(error => {
+                commonFunc.notifyMessage(error.message, 0);
+            })
+    }
+
+    async function getWoodDetailsById(id) {
+        await WoodServices.getAllWoodCostById(id)
+            .then(response => {
+                setSelectedWoodDetails(response);
+                setSelectedWoodTypeId(id)
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
@@ -92,17 +104,6 @@ const HomeBase = ({navigation}) => {
 
     const aboutOnPress = () => {
         navigation.navigate('About')
-    }
-
-    async function getWoodDetailsById(id) {
-        await WoodServices.getAllWoodCostById(id)
-            .then(response => {
-                setSelectedWoodDetails(response);
-                setSelectedWoodTypeId(id)
-            })
-            .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
-            })
     }
 
     const onChangeText = val => {
@@ -308,7 +309,6 @@ const HomeBase = ({navigation}) => {
                                 </View>
                                 <Button
                                     title="Save | සුරකින්න"
-                                    onPress={addOnPress}
                                     containerStyle={styles.buttonContainerStyle}
                                     buttonStyle={styles.buttonStyle}
                                     titleStyle={styles.buttonTitleStyle}
@@ -321,8 +321,8 @@ const HomeBase = ({navigation}) => {
                     <Card containerStyle={styles.listCard}>
                         <View style={styles.listItemHeader}>
                             <View style={styles.listItemHeaderItem}>
-                                <Text style={styles.listItemHeaderTitle}>J.J.Gamage</Text>
-                                <Text style={styles.listItemHeaderWood}>Teak wood</Text>
+                                <Text style={styles.listItemHeaderTitle}>{selectedWoodDetails.woodType}</Text>
+                                <Text style={styles.listItemHeaderWood}>Wood List</Text>
                             </View>
                             <Divider style={{marginVertical: 5}}/>
                             <View style={styles.listItemHeaderItem}>
