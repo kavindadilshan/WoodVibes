@@ -30,7 +30,7 @@ export async function getAllWoodCost(data){
     apiObject.authentication = true;
     apiObject.isBasicAuth = false;
     apiObject.urlencoded = false;
-    apiObject.endpoint = `/wood-cost/list/${data.factoryId}`;
+    apiObject.endpoint = `api/wood-cost/list/${data}`;
     apiObject.multipart = false;
     apiObject.body = null;
     return await ApiService.callApi(apiObject);
