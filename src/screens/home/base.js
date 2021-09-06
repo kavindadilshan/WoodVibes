@@ -2,13 +2,14 @@ import React, {useState, useEffect} from 'react';
 import {ScrollView, StyleSheet, Text, View, Dimensions} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
 import {Picker} from '@react-native-picker/picker';
-import {Button, Card, Divider, Input} from 'react-native-elements';
+import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {StorageStrings} from "../../utils/constants";
 import * as WoodServices from '../../services/wood';
 import * as CustomerServices from '../../services/customer';
+import * as InvoiceServices from '../../services/invoice';
 import * as commonFunc from "../../utils/commonFunc";
 import {add} from "react-native-reanimated";
 
@@ -23,7 +24,7 @@ const HomeBase = ({navigation}) => {
     const [length, setLength] = useState();
     const [circumference, setCircumference] = useState();
     const [totalAmount, setTotalAmount] = useState();
-    const [discount, setDiscount] = useState();
+    const [discount, setDiscount] = useState('0');
     const [netAmount, setNetAmount] = useState();
     const [payAmount, setPayAmount] = useState();
     const [editable, setEditable] = useState(false);
@@ -32,7 +33,10 @@ const HomeBase = ({navigation}) => {
     const [tableLoading, setTableLoading] = useState(false);
     const [customerList, setCustomerList] = useState([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState();
-    const [asChanged,setAsChanged]=useState(false);
+    const [asChanged, setAsChanged] = useState(false);
+    const [groupList, setGroupList] = useState([]);
+    const [visible, setVisible] = useState(false);
+    const [visibleIndex, setVisibleIndex] = useState();
 
     useEffect(async () => {
         await getWoodTypeLists();
@@ -40,9 +44,10 @@ const HomeBase = ({navigation}) => {
     }, [])
 
     async function getWoodTypeLists() {
-        await WoodServices.getAllWoodType()
+        const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
+        await WoodServices.getAllWoodCost(factoryId)
             .then(response => {
-                setWoodTypeList(response.woodTypes);
+                setWoodTypeList(response.woodMeasurementCosts);
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
@@ -64,9 +69,41 @@ const HomeBase = ({navigation}) => {
         await WoodServices.getAllWoodCostById(id)
             .then(response => {
                 setSelectedWoodDetails(response);
-                setSelectedWoodTypeId(id)
+                setSelectedWoodTypeId(id);
+                setEditable(true);
+                setLength('');
+                setCircumference('');
+                setTotalAmount('');
+                setNetAmount('')
             })
             .catch(error => {
+                commonFunc.notifyMessage(error.message, 0);
+            })
+    }
+
+    async function saveInvoiceHandler() {
+        let list=[];
+        addingList.map((item)=>{
+            list.push({
+                woodMeasurementCostId:item.woodMeasurementCostId,
+                cubicFeet:Number(item.cubicQuantity),
+                amount:Number(item.totalAmount)
+            })
+        })
+
+        const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
+        const data = {
+            customerId: selectedCustomerId,
+            factoryId: Number(factoryId),
+            totalAmount: Number(totalAmount),
+            discount: Number(discount),
+            payAmount: Number(payAmount),
+            amount: Number(payAmount),
+            invoiceDetails: list
+        }
+        await InvoiceServices.saveInvoice(data)
+            .then(commonFunc.notifyMessage('Invoice saved successfully!', 1))
+            .catch(error=>{
                 commonFunc.notifyMessage(error.message, 0);
             })
     }
@@ -79,24 +116,59 @@ const HomeBase = ({navigation}) => {
         } else if (circumference === undefined || circumference === '') {
             commonFunc.notifyMessage('Please Enter Circumference', 2);
         } else {
-            if (asChanged){
-                const cubicQuantity = length * circumference;
+            if (asChanged) {
+                const cubicQuantity = (length * (circumference / 12));
                 const totalValue = (selectedWoodDetails.cost * cubicQuantity).toFixed();
                 setTotalAmount(totalValue.toString());
                 setNetAmount(totalValue.toString());
                 setEditable(true);
-                setDiscount('')
-                const list = addingList;
-                list.push({
-                    cubicQuantity: cubicQuantity,
+
+                addingList.push({
+                    woodMeasurementCostId:selectedWoodTypeId,
+                    woodType: selectedWoodDetails.woodType,
+                    cubicQuantity: cubicQuantity.toFixed(2),
                     unitPrice: selectedWoodDetails.cost,
                     totalAmount: totalValue
                 })
-                setAddingList(list);
+
+                let totalLastAmount = 0;
+                for (let i = 0; i < addingList.length; i++) {
+                    totalLastAmount+=Number(addingList[i].totalAmount)
+                }
+                setTotalAmount(totalLastAmount.toString());
+                setNetAmount((totalLastAmount-totalLastAmount*discount/100).toString())
+                // setAddingList(list);
                 setAsChanged(false);
+                // console.log(addingList);
+                groupBy();
             }
         }
     }
+
+    const groupBy = () => {
+
+        // this gives an object with dates as keys
+        const groups = addingList.reduce((groups, game) => {
+            const woodType = game.woodType;
+            if (!groups[woodType]) {
+                groups[woodType] = [];
+            }
+            groups[woodType].push(game);
+            return groups;
+        }, {});
+
+        // Edit: to add it in the array format instead
+        const groupArrays = Object.keys(groups).map((woodType) => {
+            return {
+                woodType,
+                subList: groups[woodType]
+            };
+        });
+
+        setGroupList(groupArrays);
+
+        console.log(groupArrays);
+    };
 
     const profileOnPress = async () => {
         await AsyncStorage.clear();
@@ -107,27 +179,59 @@ const HomeBase = ({navigation}) => {
     }
 
     const onChangeText = val => {
-        prev = new Date().getTime();
         setDiscount(val);
-        setTimeout(() => {
-            let now = new Date().getTime();
-            if (now - prev >= 1000) {
-                prev = now;
-                const netValue = (totalAmount - (totalAmount * val / 100)).toFixed(2);
-                setNetAmount(netValue.toString())
+        const netValue = (totalAmount - (totalAmount * val / 100)).toFixed(2);
+        setNetAmount(netValue.toString())
+    }
+
+    const removeSelectedObject = (outerIndex, innerIndex, list) => {
+
+        list[outerIndex].subList.splice(innerIndex, 1);
+        setTableLoading(true);
+
+        const list2 = [];
+        for (let i = 0; i < list.length; i++) {
+            for (let j = 0; j < list[i].subList.length; j++) {
+                list2.push({
+                    woodMeasurementCostId:list[i].subList[j].woodMeasurementCostId,
+                    woodType: list[i].subList[j].woodType,
+                    cubicQuantity: list[i].subList[j].cubicQuantity,
+                    unitPrice: list[i].subList[j].unitPrice,
+                    totalAmount: list[i].subList[j].totalAmount
+                })
             }
-        }, 1000)
-    }
+        }
 
-    const removeSelectedObject = (index, list) => {
-        list.splice(index, 1)
-        setTableLoading(true)
-        setAddingList(list);
+        let totalLastAmount = 0;
+        for (let i = 0; i < list2.length; i++) {
+            totalLastAmount+=Number(list2[i].totalAmount)
+        }
+
         setTimeout(() => {
-            setTableLoading(false)
+            setTableLoading(false);
+            setGroupList(list);
+            setAddingList(list2);
+            setTotalAmount(totalLastAmount.toString());
+            setNetAmount((totalLastAmount-totalLastAmount*discount/100).toString())
         }, 100)
-
     }
+
+    const tableTotalValues = array => {
+        let totalCubic = 0;
+        let totalUnits = 0;
+        let totalAmounts = 0;
+        for (let i = 0; i < array.length; i++) {
+            totalCubic += Number(array[i].cubicQuantity);
+            totalUnits = array[i].unitPrice;
+            totalAmounts += Number(array[i].totalAmount)
+        }
+        return {totalCubic: totalCubic.toFixed(2), totalUnits: totalUnits, totalAmounts: totalAmounts.toFixed(2)}
+    }
+
+    const toggleOverlay = (i) => {
+        setVisible(!visible);
+        setVisibleIndex(i)
+    };
 
 
     return (
@@ -153,7 +257,7 @@ const HomeBase = ({navigation}) => {
                             />
                         </View>
                     </View>
-                    <View style={{height: screenHeight / 100 * 55}}>
+                    <View style={{height: addingList.length !== 0 ? screenHeight / 100 * 60 : '100%'}}>
                         <ScrollView contentContainerStyle={{paddingBottom: 10}} nestedScrollEnabled={true}>
                             <Card containerStyle={styles.orderCard}>
                                 <Card.Title style={{fontSize: 18}}>New order | නව ඇණවුම්</Card.Title>
@@ -168,10 +272,12 @@ const HomeBase = ({navigation}) => {
                                             mode='dropdown'
                                             dropdownIconColor={Constants.COLORS.BLACK}
                                             selectedValue={selectedLanguage}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setSelectedCustomerId(itemValue)
-                                            }>
-                                            <Picker.Item label="S.W.Nuwan" value="java"/>
+                                            onValueChange={(itemValue, itemIndex) => {
+                                                setSelectedCustomerId(itemValue);
+                                                setEditable(true);
+                                                setLength('');
+                                                setCircumference('');
+                                            }}>
                                             {customerList.map((items, i) => (
                                                 <Picker.Item label={items.name} value={items.id} key={i}/>
                                             ))}
@@ -188,11 +294,15 @@ const HomeBase = ({navigation}) => {
                                             mode='dropdown'
                                             dropdownIconColor={Constants.COLORS.BLACK}
                                             selectedValue={selectedLanguage}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                getWoodDetailsById(itemValue)
-                                            }>
+                                            onValueChange={(itemValue, itemIndex) => {
+                                                setSelectedWoodDetails(woodTypeList[itemIndex]);
+                                                setSelectedWoodTypeId(itemValue);
+                                                setEditable(true);
+                                                setLength('');
+                                                setCircumference('');
+                                            }}>
                                             {woodTypeList.map((item, i) => (
-                                                <Picker.Item label={item.name} value={item.id} key={i}/>
+                                                <Picker.Item label={item.woodType} value={item.woodTypeId} key={i}/>
                                             ))}
                                         </Picker>
                                     </View>
@@ -217,7 +327,10 @@ const HomeBase = ({navigation}) => {
                                         placeholder='Enter here...'
                                         keyboardType='decimal-pad'
                                         value={length}
-                                        onChangeText={val => {setLength(val);setAsChanged(true)}}
+                                        onChangeText={val => {
+                                            setLength(val);
+                                            setAsChanged(true)
+                                        }}
                                     />
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -232,7 +345,10 @@ const HomeBase = ({navigation}) => {
                                         placeholder='Enter here...'
                                         keyboardType='decimal-pad'
                                         value={circumference}
-                                        onChangeText={val => {setCircumference(val);setAsChanged(true)}}
+                                        onChangeText={val => {
+                                            setCircumference(val);
+                                            setAsChanged(true)
+                                        }}
                                     />
                                 </View>
                                 <Button
@@ -313,50 +429,109 @@ const HomeBase = ({navigation}) => {
                                     buttonStyle={styles.buttonStyle}
                                     titleStyle={styles.buttonTitleStyle}
                                     disabled={payAmount === undefined || payAmount === ''}
+                                    onPress={()=>saveInvoiceHandler()}
                                 />
                             </Card>
                         </ScrollView>
 
                     </View>
-                    <Card containerStyle={styles.listCard}>
-                        <View style={styles.listItemHeader}>
-                            <View style={styles.listItemHeaderItem}>
-                                <Text style={styles.listItemHeaderTitle}>{selectedWoodDetails.woodType}</Text>
-                                <Text style={styles.listItemHeaderWood}>Wood List</Text>
-                            </View>
-                            <Divider style={{marginVertical: 5}}/>
-                            <View style={styles.listItemHeaderItem}>
-                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic ප්‍රමාණය</Text>
-                                <Text style={[styles.listItemHeaderItemTitle, {width: '25%'}]}>ඒකක මිල</Text>
-                                <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>වටිනාකම</Text>
-                                <View style={{width: '10%'}}></View>
-                            </View>
-                        </View>
-                        {!tableLoading ? (
-                            <View style={styles.listItemBody}>
-                                {addingList.map((items, i) => (
-                                    <View style={styles.listItemBodyItem} key={i}>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '35%'}]}>{items.cubicQuantity}</Text>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '25%'}]}>{items.unitPrice}</Text>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{items.totalAmount}</Text>
-                                        <View style={{width: '10%', justifyContent: 'center', alignItems: 'center'}}>
-                                            <IconI
-                                                name='close-circle-outline'
-                                                size={25}
-                                                style={styles.listItemCloseIcon}
-                                                color={Constants.COLORS.RED}
-                                                onPress={() => removeSelectedObject(i, addingList)}
-                                            />
+                    {groupList.map((items, i) => (
+                        <View key={i}>
+                            {items.subList.length !== 0 && (
+                                <Card containerStyle={styles.listCard}>
+                                    <View>
+                                        <View style={styles.listItemHeader}>
+                                            <View style={styles.listItemHeaderItem}>
+                                                <Text style={styles.listItemHeaderTitle}>{items.woodType}</Text>
+                                                <Text style={styles.listItemHeaderWood}
+                                                      onPress={() => toggleOverlay(i)}>Wood
+                                                    List</Text>
+                                            </View>
+                                            <Divider style={{marginVertical: 5}}/>
+                                            <View style={styles.listItemHeaderItem}>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic
+                                                    ප්‍රමාණය</Text>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '25%'}]}>ඒකක
+                                                    මිල</Text>
+                                                <Text
+                                                    style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>වටිනාකම</Text>
+                                                <View style={{width: '10%'}}></View>
+                                            </View>
+                                        </View>
+                                        <View style={styles.listItemBody}>
+                                            <View style={styles.listItemBodyItem}>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: '35%'}]}>{tableTotalValues(items.subList).totalCubic}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: '25%'}]}>{tableTotalValues(items.subList).totalUnits}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: '40%'}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
+                                            </View>
                                         </View>
                                     </View>
-                                ))}
-                            </View>
-                        ) : null}
 
-                    </Card>
+                                </Card>
+                            )}
+
+                            <Overlay
+                                isVisible={visibleIndex === i ? visible : false}
+                                overlayStyle={styles.overlay}
+                                onBackdropPress={toggleOverlay}>
+
+                                <Card containerStyle={styles.listCard}>
+                                    <View style={styles.listItemHeader}>
+                                        <View style={styles.listItemHeaderItem}>
+                                            <Text style={styles.listItemHeaderTitle}>{items.woodType}</Text>
+                                        </View>
+                                        <Divider style={{marginVertical: 5}}/>
+                                        <View style={styles.listItemHeaderItem}>
+                                            <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic
+                                                ප්‍රමාණය</Text>
+                                            <Text style={[styles.listItemHeaderItemTitle, {width: '25%'}]}>ඒකක
+                                                මිල</Text>
+                                            <Text
+                                                style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>වටිනාකම</Text>
+                                            <View style={{width: '10%'}}></View>
+                                        </View>
+                                    </View>
+
+                                    {/*{!tableLoading && (*/}
+                                    <View style={styles.listItemBody}>
+                                        {items.subList.map((item, j) => (
+                                            <View style={styles.listItemBodyItem} key={j}>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: '35%'}]}>{item.cubicQuantity}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: '25%'}]}>{item.unitPrice}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.totalAmount}</Text>
+                                                <View style={{
+                                                    width: '10%',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <IconI
+                                                        name='close-circle-outline'
+                                                        size={25}
+                                                        style={styles.listItemCloseIcon}
+                                                        color={Constants.COLORS.RED}
+                                                        onPress={() => removeSelectedObject(i, j, groupList)}
+                                                    />
+                                                </View>
+                                            </View>
+                                        ))}
+                                    </View>
+                                    {/*)}*/}
+
+
+                                </Card>
+
+
+                            </Overlay>
+                        </View>
+
+                    ))}
+
 
                 </View>
             </ScrollView>
