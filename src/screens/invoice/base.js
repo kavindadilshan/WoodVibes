@@ -12,7 +12,7 @@ import * as commonFunc from "../../utils/commonFunc";
 import AlertMessage from "../../components/AlertMessage";
 import Loading from "../../components/loading";
 
-const WoodSetupBase = ({navigation}) => {
+const InvoiceBase = ({navigation}) => {
 
     const [invoiceList, setInvoiceList] = useState({});
     const [showAlert, setShowAlert] = useState(false);
@@ -60,7 +60,7 @@ const WoodSetupBase = ({navigation}) => {
 
     return (
         <View style={styles.container}>
-            <TabHeader title='Invoice Details'/>
+            <TabHeader title='Invoice'/>
             <ScrollView contentContainerStyle={{paddingBottom: 10}}>
                 {Object.keys(invoiceList).map((item, i) => (
                     <Card containerStyle={styles.listCard} key={i}>
@@ -86,10 +86,7 @@ const WoodSetupBase = ({navigation}) => {
                                 />
                                 <Button
                                     title="View"
-                                    onPress={() => {
-                                        setShowAlert(true);
-                                        setSelectedInvoice(invoiceList[item].id)
-                                    }}
+                                    onPress={() => navigation.navigate('InvoiceDetails')}
                                     containerStyle={styles.addNewButtonContainerStyle}
                                     buttonStyle={{...styles.addNewButtonStyle,backgroundColor:Constants.COLORS.DARK_GREEN}}
                                     titleStyle={styles.addNewButtonTitleStyle}
@@ -163,4 +160,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default WoodSetupBase;
+export default InvoiceBase;

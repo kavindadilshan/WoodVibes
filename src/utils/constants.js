@@ -9,6 +9,7 @@ export const COLORS = {
   PRIMARY_BLUE: '#007FFF',
   LIGHT_BLUE: '#61dafb',
   BACKGROUND_BLUE: '#a6ecff',
+  BACKGROUND_GREEN:'#ABEBC6',
   LIME_GREEN: '#00FF00',
   DARK_GREEN:'#186A3B',
 };
