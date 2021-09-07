@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 import IconI from 'react-native-vector-icons/Ionicons';
@@ -10,6 +10,7 @@ import TabHeader from '../../components/tabHeader';
 import * as customerService from '../../services/customer';
 import * as commonFunc from "../../utils/commonFunc";
 import {StorageStrings} from "../../utils/constants";
+import * as CustomerServices from "../../services/customer";
 
 const CustomerBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
@@ -19,6 +20,22 @@ const CustomerBase = ({navigation}) => {
     const [idType, setIdType] = useState('1');
     const [idNumber, setIdNumber] = useState('');
     const [factoryId, setFactoryId] = useState('');
+    const [customerList,setCustomerList]=useState([]);
+
+    useEffect(async () => {
+        await getAllCustomersList();
+    }, [])
+
+    async function getAllCustomersList() {
+        const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
+        await CustomerServices.getAllCustomers(factoryId)
+            .then(response => {
+                setCustomerList(response.customers);
+            })
+            .catch(error => {
+                commonFunc.notifyMessage(error.message, 0);
+            })
+    }
 
     const toggleOverlay = () => {
         setVisible(!visible);
@@ -69,35 +86,23 @@ const CustomerBase = ({navigation}) => {
     return (
         <View style={styles.container}>
             <TabHeader title="Customers" rightComponent={headerRightBtn}/>
-            <ScrollView>
-                <Card containerStyle={styles.listCard}>
-                    <Card.Title style={styles.listCardTitle}>
-                        J.J.Gamage
-                    </Card.Title>
-                    <Card.Divider/>
-                    <View style={styles.listCardItem}>
-                        <Text style={styles.listCardItemHeader}>Total Orders</Text>
-                        <Text style={styles.listCardItemDesc}>4</Text>
-                    </View>
-                    <View style={styles.listCardItem}>
-                        <Text style={styles.listCardItemHeader}>Last Order</Text>
-                        <Text style={styles.listCardItemDesc}>2021-10-21</Text>
-                    </View>
-                </Card>
-                <Card containerStyle={styles.listCard}>
-                    <Card.Title style={styles.listCardTitle}>
-                        J.J.Gamage
-                    </Card.Title>
-                    <Card.Divider/>
-                    <View style={styles.listCardItem}>
-                        <Text style={styles.listCardItemHeader}>Total Orders</Text>
-                        <Text style={styles.listCardItemDesc}>4</Text>
-                    </View>
-                    <View style={styles.listCardItem}>
-                        <Text style={styles.listCardItemHeader}>Last Order</Text>
-                        <Text style={styles.listCardItemDesc}>2021-10-21</Text>
-                    </View>
-                </Card>
+            <ScrollView contentContainerStyle={{paddingBottom:10}}>
+                {customerList.map((items,i)=>(
+                    <Card containerStyle={styles.listCard} key={i}>
+                        <Card.Title style={styles.listCardTitle}>
+                            {items.name}
+                        </Card.Title>
+                        <Card.Divider/>
+                        <View style={styles.listCardItem}>
+                            <Text style={styles.listCardItemHeader}>Total Orders</Text>
+                            <Text style={styles.listCardItemDesc}>4</Text>
+                        </View>
+                        <View style={styles.listCardItem}>
+                            <Text style={styles.listCardItemHeader}>Last Order</Text>
+                            <Text style={styles.listCardItemDesc}>{items.lastOrderDate}</Text>
+                        </View>
+                    </Card>
+                ))}
             </ScrollView>
 
 
