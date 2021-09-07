@@ -11,3 +11,15 @@ export async function saveInvoice(body){
     apiObject.body = body;
     return await ApiService.callApi(apiObject);
 }
+
+export async function getAllInvoice(id){
+    const apiObject = {};
+    apiObject.method = 'GET';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/${id}`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    return await ApiService.callApi(apiObject);
+}
