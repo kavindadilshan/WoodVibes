@@ -34,7 +34,7 @@ class App extends React.Component {
                     color: Constance.COLORS.BLACK,
                     textAlign: "center"
                 }}
-                cancelButtonColor={Constance.COLORS.RED}
+                cancelButtonColor={Constance.COLORS.PRIMARY_COLOR}
                 contentStyle={{alignItems: 'center', justifyContent: 'center', marginVertical: '5%'}}
                 contentContainerStyle={{borderRadius: 15}}
                 cancelButtonStyle={{

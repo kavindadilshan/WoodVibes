@@ -14,7 +14,8 @@ export const callApi = async (apiObject) => {
     let headers;
     let method = apiObject.method ? apiObject.method.toLowerCase() : 'get';
 
-    if (method === 'post' || method === 'put' || method === 'patch') {
+
+    if (method === 'post' || method === 'put' || method === 'patch' || method === 'delete') {
         body = apiObject.body ? apiObject.body : {};
     }
 
@@ -35,7 +36,7 @@ export const callApi = async (apiObject) => {
     const url = `${apiConfig.serverUrl}/${apiConfig.basePath}/${apiObject.endpoint}`;
     let result;
 
-    await axios[method](url, method !== 'get' ? body : {headers: headers}, {headers: headers})
+    await axios[method](url, method !== 'get' && method !== 'delete'? body : {headers: headers}, {headers: headers})
         .then(async response => {
             if (!response.data.success) {
                 let code = response.data.code;
@@ -108,6 +109,7 @@ export const callApi = async (apiObject) => {
         });
 
     return result;
+
 };
 
 const renewTokenHandler = async (apiObject) => {

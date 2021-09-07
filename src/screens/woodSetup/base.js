@@ -16,7 +16,8 @@ const WoodSetupBase = ({navigation}) => {
 
     const [invoiceList, setInvoiceList] = useState({});
     const [showAlert, setShowAlert] = useState(false);
-    const [loading,setLoading]=useState(false);
+    const [loading, setLoading] = useState(false);
+    const [selectedInvoice, setSelectedInvoice] = useState();
 
     useEffect(async () => {
         setLoading(true);
@@ -38,7 +39,16 @@ const WoodSetupBase = ({navigation}) => {
     async function deleteInvoice(item) {
         switch (item) {
             case 'yes':
-                setShowAlert(true);
+                // setLoading(true)
+                await InvoiceServices.deleteInvoice(selectedInvoice)
+                    .then(async response => {
+                        commonFunc.notifyMessage('Invoice delete successfully', 1);
+                        await getAllInvoiceList();
+                    })
+                    .catch(error => {
+                        commonFunc.notifyMessage(error.message, 0);
+                    })
+                setShowAlert(false);
                 break;
             case 'no':
                 setShowAlert(false);
@@ -61,11 +71,14 @@ const WoodSetupBase = ({navigation}) => {
                             marginBottom: 5
                         }}>
                             <Card.Title style={styles.listCardTitle}>
-                                Sample Invoice
+                                Invoice
                             </Card.Title>
                             <Button
                                 title="Delete"
-                                onPress={()=>setShowAlert(true)}
+                                onPress={() => {
+                                    setShowAlert(true);
+                                    setSelectedInvoice(invoiceList[item].id)
+                                }}
                                 containerStyle={styles.addNewButtonContainerStyle}
                                 buttonStyle={styles.addNewButtonStyle}
                                 titleStyle={styles.addNewButtonTitleStyle}
