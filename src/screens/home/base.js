@@ -302,7 +302,7 @@ const HomeBase = ({navigation}) => {
                                                 setCircumference('');
                                             }}>
                                             {woodTypeList.map((item, i) => (
-                                                <Picker.Item label={item.woodType} value={item.woodTypeId} key={i}/>
+                                                <Picker.Item label={item.woodType} value={item.id} key={i}/>
                                             ))}
                                         </Picker>
                                     </View>
