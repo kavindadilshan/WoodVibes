@@ -73,7 +73,7 @@ const InvoiceBase = ({navigation}) => {
                             <Card.Title style={styles.listCardTitle}>
                                 Invoice
                             </Card.Title>
-                            <View style={{flexDirection:'row',justifyContent:'space-between',width:'23%'}}>
+                            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '23%'}}>
                                 <Button
                                     title="Delete"
                                     onPress={() => {
@@ -88,7 +88,10 @@ const InvoiceBase = ({navigation}) => {
                                     title="View"
                                     onPress={() => navigation.navigate('InvoiceDetails')}
                                     containerStyle={styles.addNewButtonContainerStyle}
-                                    buttonStyle={{...styles.addNewButtonStyle,backgroundColor:Constants.COLORS.DARK_GREEN}}
+                                    buttonStyle={{
+                                        ...styles.addNewButtonStyle,
+                                        backgroundColor: Constants.COLORS.DARK_GREEN
+                                    }}
                                     titleStyle={styles.addNewButtonTitleStyle}
                                 />
                             </View>
@@ -96,11 +99,17 @@ const InvoiceBase = ({navigation}) => {
                         </View>
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
-                            <Text style={styles.listCardItemHeader}>Total Amount</Text>
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.listCardItemHeader}>Total Amount</Text>
+                                <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                            </View>
                             <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
                         </View>
                         <View style={styles.listCardItem}>
-                            <Text style={styles.listCardItemHeader}>Invoice Date</Text>
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.listCardItemHeader}>Invoice Date</Text>
+                                <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                            </View>
                             <Text style={styles.listCardItemDesc}>{invoiceList[item].invoiceDate}</Text>
                         </View>
                     </Card>
@@ -150,6 +159,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 5,
+        alignItems:'center'
     },
     listCardItemHeader: {
         fontSize: 16,

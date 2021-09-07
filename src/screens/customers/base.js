@@ -101,11 +101,18 @@ const CustomerBase = ({navigation}) => {
                         </Card.Title>
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
-                            <Text style={styles.listCardItemHeader}>Total Orders</Text>
+                            <View style={{flexDirection:'column'}}>
+                                <Text style={styles.listCardItemHeader}>Total Orders </Text>
+                                <Text style={{fontSize: 10}}> මුළු ඇණවුම් </Text>
+                            </View>
+
                             <Text style={styles.listCardItemDesc}>4</Text>
                         </View>
                         <View style={styles.listCardItem}>
-                            <Text style={styles.listCardItemHeader}>Last Order</Text>
+                            <View style={{flexDirection:'column'}}>
+                                <Text style={styles.listCardItemHeader}>Last Order </Text>
+                                <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                            </View>
                             <Text style={styles.listCardItemDesc}>{items.lastOrderDate}</Text>
                         </View>
                     </Card>
@@ -213,6 +220,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 5,
+        alignItems:'center'
     },
     listCardItemHeader: {
         fontSize: 16,
