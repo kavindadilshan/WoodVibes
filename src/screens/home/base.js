@@ -599,14 +599,14 @@ const styles = StyleSheet.create({
     },
     buttonContainerStyle: {
         marginVertical: 20,
-        borderRadius: 10,
         alignSelf: 'center',
         width: '80%',
         height: 50,
     },
     buttonStyle: {
         height: 50,
-        backgroundColor: Constants.COLORS.PRIMARY_COLOR
+        backgroundColor: Constants.COLORS.PRIMARY_COLOR,
+        borderRadius: 10,
     },
     buttonTitleStyle: {
         fontSize: 20,

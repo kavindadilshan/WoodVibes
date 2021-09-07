@@ -39,7 +39,8 @@ const WoodSetupBase = ({navigation}) => {
     async function deleteInvoice(item) {
         switch (item) {
             case 'yes':
-                // setLoading(true)
+                setShowAlert(false);
+                setLoading(true);
                 await InvoiceServices.deleteInvoice(selectedInvoice)
                     .then(async response => {
                         commonFunc.notifyMessage('Invoice delete successfully', 1);
@@ -48,7 +49,6 @@ const WoodSetupBase = ({navigation}) => {
                     .catch(error => {
                         commonFunc.notifyMessage(error.message, 0);
                     })
-                setShowAlert(false);
                 break;
             case 'no':
                 setShowAlert(false);
@@ -73,16 +73,29 @@ const WoodSetupBase = ({navigation}) => {
                             <Card.Title style={styles.listCardTitle}>
                                 Invoice
                             </Card.Title>
-                            <Button
-                                title="Delete"
-                                onPress={() => {
-                                    setShowAlert(true);
-                                    setSelectedInvoice(invoiceList[item].id)
-                                }}
-                                containerStyle={styles.addNewButtonContainerStyle}
-                                buttonStyle={styles.addNewButtonStyle}
-                                titleStyle={styles.addNewButtonTitleStyle}
-                            />
+                            <View style={{flexDirection:'row',justifyContent:'space-between',width:'23%'}}>
+                                <Button
+                                    title="Delete"
+                                    onPress={() => {
+                                        setShowAlert(true);
+                                        setSelectedInvoice(invoiceList[item].id)
+                                    }}
+                                    containerStyle={styles.addNewButtonContainerStyle}
+                                    buttonStyle={styles.addNewButtonStyle}
+                                    titleStyle={styles.addNewButtonTitleStyle}
+                                />
+                                <Button
+                                    title="View"
+                                    onPress={() => {
+                                        setShowAlert(true);
+                                        setSelectedInvoice(invoiceList[item].id)
+                                    }}
+                                    containerStyle={styles.addNewButtonContainerStyle}
+                                    buttonStyle={{...styles.addNewButtonStyle,backgroundColor:Constants.COLORS.DARK_GREEN}}
+                                    titleStyle={styles.addNewButtonTitleStyle}
+                                />
+                            </View>
+
                         </View>
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
@@ -116,13 +129,13 @@ const styles = StyleSheet.create({
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
     },
     addNewButtonContainerStyle: {
-        borderRadius: 10,
         height: 40,
     },
     addNewButtonStyle: {
         height: 40,
         paddingHorizontal: 20,
-        backgroundColor: Constants.COLORS.PRIMARY_COLOR
+        backgroundColor: Constants.COLORS.PRIMARY_COLOR,
+        borderRadius: 10,
     },
     addNewButtonTitleStyle: {
         fontSize: 16,

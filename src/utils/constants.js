@@ -10,6 +10,7 @@ export const COLORS = {
   LIGHT_BLUE: '#61dafb',
   BACKGROUND_BLUE: '#a6ecff',
   LIME_GREEN: '#00FF00',
+  DARK_GREEN:'#186A3B',
 };
 export const APP_NAME = 'WoodVibe';
 export const AGENT_CONTACT = '0702177781';

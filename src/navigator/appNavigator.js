@@ -8,7 +8,7 @@ import LoginScreen from '../screens/login/base';
 import RegisterScreen from '../screens/register/base';
 import HomeScreen from '../screens/home/base';
 import CustomersScreen from '../screens/customers/base';
-import WoodSetupScreen from '../screens/woodSetup/base';
+import WoodSetupScreen from '../screens/invoice/base';
 import ApproveScreen from '../screens/approve/base';
 import ProfileScreen from '../screens/profile/base';
 import AboutScreen from '../screens/about/base';

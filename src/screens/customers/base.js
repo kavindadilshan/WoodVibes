@@ -11,6 +11,8 @@ import * as customerService from '../../services/customer';
 import * as commonFunc from "../../utils/commonFunc";
 import {StorageStrings} from "../../utils/constants";
 import * as CustomerServices from "../../services/customer";
+import * as Constance from "../../utils/constants";
+import Loading from "../../components/loading";
 
 const CustomerBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
@@ -23,6 +25,7 @@ const CustomerBase = ({navigation}) => {
     const [customerList,setCustomerList]=useState([]);
 
     useEffect(async () => {
+        setLoading(true)
         await getAllCustomersList();
     }, [])
 
@@ -35,6 +38,7 @@ const CustomerBase = ({navigation}) => {
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
             })
+        setLoading(false);
     }
 
     const toggleOverlay = () => {
@@ -63,13 +67,16 @@ const CustomerBase = ({navigation}) => {
             identityNo: idNumber,
             factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID)
         }
+        setLoading(true);
         await customerService.addCustomer(data)
-            .then(res => {
+            .then(async res => {
                 setVisible(false);
-                commonFunc.notifyMessage("Customer has been successfully created!", 0);
+                await getAllCustomersList();
+                commonFunc.notifyMessage("Customer has been successfully created!", 1);
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
+                setLoading(false);
             })
     }
 
@@ -164,6 +171,7 @@ const CustomerBase = ({navigation}) => {
                     />
                 </Card>
             </Overlay>
+            <Loading isVisible={loading}/>
         </View>
     );
 };
@@ -174,13 +182,20 @@ const styles = StyleSheet.create({
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
     },
     addNewButtonContainerStyle: {
-        borderRadius: 10,
         height: 40,
     },
     addNewButtonStyle: {
         height: 40,
         paddingHorizontal: 20,
         backgroundColor: Constants.COLORS.PRIMARY_BLUE,
+        borderRadius: 10,
+        shadowColor: Constance.COLORS.BLACK,
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 2,
     },
     addNewButtonTitleStyle: {
         fontSize: 16,
