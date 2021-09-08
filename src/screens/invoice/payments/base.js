@@ -108,8 +108,8 @@ const PayList = ({navigation, route}) => {
                                 <View style={styles.listItemHeaderItem}>
                                     <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Amount (Rs.)</Text>
                                     <Text
-                                        style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>Payment Date</Text>
-                                    <Text style={[styles.listItemHeaderItemTitle, {width: '20%'}]}>Action</Text>
+                                        style={[styles.listItemHeaderItemTitle, {width: '50%'}]}>Payment Date</Text>
+                                    <View style={{width: '10%'}}></View>
                                 </View>
                             </View>
                             <View style={styles.listItemBody}>
@@ -118,9 +118,9 @@ const PayList = ({navigation, route}) => {
                                         <Text
                                             style={[styles.listItemBodyItemText, {width: '30%'}]}>{items.amount.toFixed(2)}</Text>
                                         <Text
-                                            style={[styles.listItemBodyItemText, {width: '40%'}]}>{items.paymentDate}</Text>
+                                            style={[styles.listItemBodyItemText, {width: '50%'}]}>{items.paymentDate}</Text>
                                         <View style={{
-                                            width: '20%',
+                                            width: '10%',
                                             justifyContent: 'center',
                                             alignItems: 'center'
                                         }}>
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     },
     orderCard: {
         borderRadius: 10,
-        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
+        backgroundColor: Constants.COLORS.BACKGROUND_PURPLE,
         borderWidth: 0,
     },
     cardItemConatiner: {

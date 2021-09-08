@@ -63,57 +63,60 @@ const InvoiceBase = ({navigation}) => {
             <TabHeader title='Invoice'/>
             <ScrollView contentContainerStyle={{paddingBottom: 10}}>
                 {Object.keys(invoiceList).map((item, i) => (
-                    <Card containerStyle={styles.listCard} key={i}>
-                        <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginBottom: 5
-                        }}>
-                            <Card.Title style={styles.listCardTitle}>
-                                Invoice
-                            </Card.Title>
-                            <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                                <Button
-                                    title="Delete"
-                                    onPress={() => {
-                                        setShowAlert(true);
-                                        setSelectedInvoice(invoiceList[item].id)
-                                    }}
-                                    containerStyle={styles.addNewButtonContainerStyle}
-                                    buttonStyle={styles.addNewButtonStyle}
-                                    titleStyle={styles.addNewButtonTitleStyle}
-                                />
-                                <Button
-                                    title="View"
-                                    onPress={() => navigation.navigate('InvoiceDetails',{invoiceId:invoiceList[item].id})}
-                                    containerStyle={styles.addNewButtonContainerStyle}
-                                    buttonStyle={{
-                                        ...styles.addNewButtonStyle,
-                                        backgroundColor: Constants.COLORS.DARK_GREEN,
-                                        marginLeft:5
-                                    }}
-                                    titleStyle={styles.addNewButtonTitleStyle}
-                                />
-                            </View>
+                    invoiceList[item].id && (
+                        <Card containerStyle={styles.listCard} key={i}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: 5
+                            }}>
+                                <Card.Title style={styles.listCardTitle}>
+                                    Invoice
+                                </Card.Title>
+                                <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                                    <Button
+                                        title="Delete"
+                                        onPress={() => {
+                                            setShowAlert(true);
+                                            setSelectedInvoice(invoiceList[item].id)
+                                        }}
+                                        containerStyle={styles.addNewButtonContainerStyle}
+                                        buttonStyle={styles.addNewButtonStyle}
+                                        titleStyle={styles.addNewButtonTitleStyle}
+                                    />
+                                    <Button
+                                        title="View"
+                                        onPress={() => navigation.navigate('InvoiceDetails', {invoiceId: invoiceList[item].id})}
+                                        containerStyle={styles.addNewButtonContainerStyle}
+                                        buttonStyle={{
+                                            ...styles.addNewButtonStyle,
+                                            backgroundColor: Constants.COLORS.DARK_GREEN,
+                                            marginLeft: 5
+                                        }}
+                                        titleStyle={styles.addNewButtonTitleStyle}
+                                    />
+                                </View>
 
-                        </View>
-                        <Card.Divider/>
-                        <View style={styles.listCardItem}>
-                            <View style={{flexDirection: 'column'}}>
-                                <Text style={styles.listCardItemHeader}>Total Amount</Text>
-                                <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
                             </View>
-                            <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
-                        </View>
-                        <View style={styles.listCardItem}>
-                            <View style={{flexDirection: 'column'}}>
-                                <Text style={styles.listCardItemHeader}>Invoice Date</Text>
-                                <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                            <Card.Divider/>
+                            <View style={styles.listCardItem}>
+                                <View style={{flexDirection: 'column'}}>
+                                    <Text style={styles.listCardItemHeader}>Total Amount</Text>
+                                    <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                                </View>
+                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
                             </View>
-                            <Text style={styles.listCardItemDesc}>{invoiceList[item].invoiceDate}</Text>
-                        </View>
-                    </Card>
+                            <View style={styles.listCardItem}>
+                                <View style={{flexDirection: 'column'}}>
+                                    <Text style={styles.listCardItemHeader}>Invoice Date</Text>
+                                    <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                                </View>
+                                <Text style={styles.listCardItemDesc}>{invoiceList[item].invoiceDate}</Text>
+                            </View>
+                        </Card>
+                    )
+
                 ))}
 
             </ScrollView>
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 5,
-        alignItems:'center'
+        alignItems: 'center'
     },
     listCardItemHeader: {
         fontSize: 16,
