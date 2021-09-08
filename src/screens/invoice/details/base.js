@@ -2,19 +2,52 @@ import React, {Component, useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, Text, View} from "react-native";
 import TabHeader from "../../../components/tabHeader";
 import * as Constants from "../../../utils/constants";
-import {Card, Divider, Input} from "react-native-elements";
+import {Button, Card, Divider, Input} from "react-native-elements";
 import {Picker} from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {StorageStrings} from "../../../utils/constants";
 import * as InvoiceServices from "../../../services/invoice";
 import * as commonFunc from "../../../utils/commonFunc";
 import IconI from "react-native-vector-icons/Ionicons";
+import * as Constance from "../../../utils/constants";
 
+const list = {
+    customerName: 'kavinda dilshan',
+    totalAmount: 25000,
+    invoiceDetails: [
+        {
+            woodType: 'මහෝගනී',
+            id: '1',
+            cubicFeet: '0.2',
+            amount: 2000
+        },
+        {
+            woodType: 'බුරුත',
+            id: '2',
+            cubicFeet: '0.2',
+            amount: 2000
+        },
+        {
+            woodType: 'මහෝගනී',
+            id: '3',
+            cubicFeet: '0.2',
+            amount: 2000
+        },
+        {
+            woodType: 'තේක්ක',
+            id: '4',
+            cubicFeet: '0.2',
+            amount: 2000
+        }
+    ]
+}
 const InvoiceDetailsBase = ({navigation, route}) => {
     const [woodType, setWoodType] = useState([]);
     const [selectedWoodDetails, setSelectedWoodDetails] = useState({});
     const [invoiceDetailsList, setInvoiceDetailsList] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [customerName,setCustomerName]=useState('kavinda');
+    const [totalAmount,setTotalAmount]=useState(30000);
 
     useEffect(async () => {
         // setLoading(true);
@@ -24,8 +57,9 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     async function getInvoiceById(invoiceId) {
         await InvoiceServices.getInvoiceById(invoiceId)
             .then(response => {
-                if (response.invoiceDetails!==null) {
-                    setInvoiceDetailsList(response.invoiceDetails);
+                if (response.invoiceDetails !== null) {
+                    // setInvoiceDetailsList(response.invoiceDetails);
+                    groupBy();
                 }
             })
             .catch(error => {
@@ -34,99 +68,137 @@ const InvoiceDetailsBase = ({navigation, route}) => {
         // setLoading(false);
     }
 
+    const groupBy = () => {
+
+        // this gives an object with dates as keys
+        const groups = list.invoiceDetails.reduce((groups, game) => {
+            const woodType = game.woodType;
+            if (!groups[woodType]) {
+                groups[woodType] = [];
+            }
+            groups[woodType].push(game);
+            return groups;
+        }, {});
+
+        // Edit: to add it in the array format instead
+        const groupArrays = Object.keys(groups).map((woodType) => {
+            return {
+                woodType,
+                subList: groups[woodType]
+            };
+        });
+
+        setInvoiceDetailsList(groupArrays);
+
+        console.log(groupArrays);
+    };
+
+    const headerRightBtn = (
+        <Button
+            title="Pay List"
+            // onPress={toggleOverlay}
+            containerStyle={styles.addNewButtonContainerStyle}
+            buttonStyle={styles.addNewButtonStyle}
+            titleStyle={styles.addNewButtonTitleStyle}
+        />
+    );
+
     return (
         <View style={styles.container}>
-            <TabHeader title='Invoice Details' backButton={true} navigation={navigation}/>
+            <TabHeader title='Invoice Details' backButton={true} navigation={navigation}
+                       rightComponent={headerRightBtn}/>
             <ScrollView contentContainerStyle={{paddingBottom: 10}}>
                 <Card containerStyle={styles.orderCard}>
                     <Card.Title style={{fontSize: 18}}>Invoice Details | ඉන්වොයිසි විස්තර</Card.Title>
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+                    {/*<View style={[styles.cardItemConatiner, {marginBottom: 10}]}>*/}
+                    {/*    <View>*/}
+                    {/*        <Text>Invoice Number</Text>*/}
+                    {/*        <Text style={{fontFamily: 'Amalee'}}>ඉන්වොයිසි අංකය</Text>*/}
+                    {/*    </View>*/}
+                    {/*    /!*<View style={styles.pickerConatiner}>*!/*/}
+                    {/*    /!*<Picker*!/*/}
+                    {/*    /!*    mode='dropdown'*!/*/}
+                    {/*    /!*    dropdownIconColor={Constants.COLORS.BLACK}*!/*/}
+                    {/*    /!*    selectedValue={selectedWoodDetails}*!/*/}
+                    {/*    /!*    onValueChange={(itemValue, itemIndex) => {*!/*/}
+                    {/*    /!*        setSelectedWoodDetails(invoiceDetailsList[itemIndex])*!/*/}
+                    {/*    /!*    }}*!/*/}
+                    {/*    /!*>*!/*/}
+                    {/*    /!*    {invoiceDetailsList.map((items, i) => (*!/*/}
+                    {/*    /!*        <Picker.Item label={`item ${i}`} value={items.id} key={i}/>*!/*/}
+                    {/*    /!*    ))}*!/*/}
+                    {/*    /!*</Picker>*!/*/}
+                    {/*    /!*</View>*!/*/}
+                    {/*</View>*/}
+                    {/*{invoiceDetailsList.map((items,i)=>(*/}
+                    {/*    <View>*/}
+                    {/*        */}
+                    {/*    </View>*/}
+                    {/*))}*/}
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
-                            <Text>Invoice Number</Text>
-                            <Text style={{fontFamily: 'Amalee'}}>ඉන්වොයිසි අංකය</Text>
-                        </View>
-                        <View style={styles.pickerConatiner}>
-                        <Picker
-                            mode='dropdown'
-                            dropdownIconColor={Constants.COLORS.BLACK}
-                            selectedValue={selectedWoodDetails}
-                            onValueChange={(itemValue, itemIndex) => {
-                                setSelectedWoodDetails(invoiceDetailsList[itemIndex])
-                            }}
-                        >
-                            {invoiceDetailsList.map((items, i) => (
-                                <Picker.Item label={`item ${i}`} value={items.id} key={i}/>
-                            ))}
-                        </Picker>
-                        </View>
-                    </View>
-                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
-                        <View>
-                            <Text>Cubic feet</Text>
-                            <Text style={{fontFamily: 'Amalee'}}>ඝන අඩි</Text>
+                            <Text>Customer Name</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>පාරිභෝගිකයාගේ නම</Text>
                         </View>
                         <Input
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
                             textAlign={'right'}
                             placeholder='Cubic Feet'
-                            value={(selectedWoodDetails.cubicFeet?selectedWoodDetails.cubicFeet:'').toString()}
+                            value={customerName}
+                            disabled={true}
                         />
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
-                            <Text>Amount</Text>
-                            <Text style={{fontFamily: 'Amalee'}}>මුදල</Text>
+                            <Text>Total Amount</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>මුලු වටිනාකම</Text>
                         </View>
                         <Input
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
                             textAlign={'right'}
-                            placeholder='Enter here...'
-                            value={`Rs. ${(selectedWoodDetails.amount?selectedWoodDetails.amount:'').toString()}`}
+                            placeholder='Cubic Feet'
+                            value={`Rs. ${totalAmount.toFixed(2)}`}
+                            disabled={true}
                         />
                     </View>
-                </Card>
-                <Card containerStyle={styles.listCard}>
-                    <View>
-                        <View style={styles.listItemHeader}>
-                            <Card.Title style={{fontSize: 18,color: Constants.COLORS.PRIMARY_COLOR}}>Pay List | ගෙවීම් ලැයිස්තුව</Card.Title>
-                            <Divider style={{marginVertical: 5}}/>
-                            <View style={styles.listItemHeaderItem}>
-                                <Text style={[styles.listItemHeaderItemTitle, {width: '20%'}]}>Payment Id</Text>
-                                <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>amount (Rs.)</Text>
-                                <Text
-                                    style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>Payment Date</Text>
-                                <View style={{width: '10%'}}></View>
-                            </View>
-                        </View>
-                        <View style={styles.listItemBody}>
-                            <View style={styles.listItemBodyItem}>
-                                <Text
-                                    style={[styles.listItemBodyItemText, {width: '20%'}]}>1</Text>
-                                <Text
-                                    style={[styles.listItemBodyItemText, {width: '30%'}]}>1200</Text>
-                                <Text
-                                    style={[styles.listItemBodyItemText, {width: '40%'}]}>07-09-2021 19:37 PM</Text>
-                                <View style={{
-                                    width: '10%',
-                                    justifyContent: 'center',
-                                    alignItems: 'center'
-                                }}>
-                                    <IconI
-                                        name='close-circle-outline'
-                                        size={25}
-                                        style={styles.listItemCloseIcon}
-                                        color={Constants.COLORS.RED}
-                                        // onPress={() => removeSelectedObject(i, j, groupList)}
-                                    />
+
+                    {invoiceDetailsList.map((items, i) => (
+                        <Card containerStyle={styles.listCard} key={i}>
+                            <View style={styles.listItemHeader}>
+                                <View style={styles.listItemHeaderItem}>
+                                    <Text style={styles.listItemHeaderTitle}>{items.woodType}</Text>
+                                </View>
+                                <Divider style={{marginVertical: 5}}/>
+                                <View style={styles.listItemHeaderItem}>
+                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Cubic Feet (අඩි)</Text>
+                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>ඒකක මිල</Text>
+                                    <Text
+                                        style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>වටිනාකම (Rs.)</Text>
                                 </View>
                             </View>
-                        </View>
-                    </View>
+
+                            {items.subList.map((item, j) => (
+                                <View style={styles.listItemBody} key={j}>
+                                    <View style={styles.listItemBodyItem}>
+                                        <Text
+                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{`Item No ${j}`}</Text>
+                                        <Text
+                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.cubicFeet}</Text>
+                                        <Text
+                                            style={[styles.listItemBodyItemText, {width: '40%'}]}>{(item.amount).toFixed(2)}</Text>
+                                    </View>
+                                </View>
+                            ))}
+
+                        </Card>
+                    ))}
+
 
                 </Card>
+
             </ScrollView>
         </View>
 
@@ -160,6 +232,8 @@ const styles = StyleSheet.create({
     listCard: {
         borderRadius: 10,
         borderWidth: 0,
+        width: '100%',
+        left: -15
     },
     listItemHeader: {},
     listItemHeaderItem: {
@@ -202,5 +276,24 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     listItemCloseIcon: {},
+    addNewButtonContainerStyle: {
+        height: 40,
+    },
+    addNewButtonStyle: {
+        height: 40,
+        paddingHorizontal: 20,
+        backgroundColor: Constants.COLORS.PRIMARY_BLUE,
+        borderRadius: 10,
+        shadowColor: Constance.COLORS.BLACK,
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 2,
+    },
+    addNewButtonTitleStyle: {
+        fontSize: 16,
+    },
 })
 export default InvoiceDetailsBase;

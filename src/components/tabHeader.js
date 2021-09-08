@@ -13,12 +13,12 @@ const TabHeader = ({title, rightComponent,backButton,navigation}) => {
                     name='chevron-back-outline'
                     size={25}
                     color={Constants.COLORS.BLACK}
-                    style={{marginRight:10}}
+                    style={{marginRight:'2%'}}
                     onPress={() => navigation.goBack()}
                 />
             )}
 
-            <View style={styles.subContainer}>
+            <View style={{...styles.subContainer,width:backButton?'90%':'100%'}}>
                 <Text style={styles.headerText}>{title}</Text>
                 {
                     rightComponent
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        width:'100%'
+        width:'95%'
     },
     headerText: {
         fontSize: 20,
