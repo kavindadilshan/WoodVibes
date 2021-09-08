@@ -35,3 +35,27 @@ export async function deleteInvoice(id){
     apiObject.body = null;
     return await ApiService.callApi(apiObject);
 }
+
+export async function getInvoiceById(id){
+    const apiObject = {};
+    apiObject.method = 'GET';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/${id}/details`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    return await ApiService.callApi(apiObject);
+}
+
+export async function getInvoicePaymentDetails(id){
+    const apiObject = {};
+    apiObject.method = 'GET';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/${id}/payments`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    return await ApiService.callApi(apiObject);
+}

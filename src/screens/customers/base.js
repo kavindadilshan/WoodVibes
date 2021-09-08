@@ -42,6 +42,9 @@ const CustomerBase = ({navigation}) => {
     }
 
     const toggleOverlay = () => {
+        setName('');
+        setIdNumber('');
+        setMobile('');
         setVisible(!visible);
     };
 
@@ -259,7 +262,6 @@ const styles = StyleSheet.create({
     },
     buttonContainerStyle: {
         marginTop: 20,
-        borderRadius: 10,
         alignSelf: 'center',
         width: '80%',
         height: 50,
@@ -267,6 +269,7 @@ const styles = StyleSheet.create({
     buttonStyle: {
         height: 50,
         backgroundColor: Constants.COLORS.PRIMARY_COLOR,
+        borderRadius: 10,
     },
     buttonTitleStyle: {
         fontSize: 20,

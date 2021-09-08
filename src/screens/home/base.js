@@ -580,8 +580,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     pickerConatiner: {
-        width: '50%',
-        marginRight: -18,
+        width: '45%',
     },
     inputContainerStyle: {
         backgroundColor: Constants.COLORS.WHITE,

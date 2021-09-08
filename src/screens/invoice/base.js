@@ -73,7 +73,7 @@ const InvoiceBase = ({navigation}) => {
                             <Card.Title style={styles.listCardTitle}>
                                 Invoice
                             </Card.Title>
-                            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '23%'}}>
+                            <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
                                 <Button
                                     title="Delete"
                                     onPress={() => {
@@ -86,11 +86,12 @@ const InvoiceBase = ({navigation}) => {
                                 />
                                 <Button
                                     title="View"
-                                    onPress={() => navigation.navigate('InvoiceDetails')}
+                                    onPress={() => navigation.navigate('InvoiceDetails',{invoiceId:invoiceList[item].id})}
                                     containerStyle={styles.addNewButtonContainerStyle}
                                     buttonStyle={{
                                         ...styles.addNewButtonStyle,
-                                        backgroundColor: Constants.COLORS.DARK_GREEN
+                                        backgroundColor: Constants.COLORS.DARK_GREEN,
+                                        marginLeft:5
                                     }}
                                     titleStyle={styles.addNewButtonTitleStyle}
                                 />
