@@ -10,68 +10,40 @@ import * as InvoiceServices from "../../../services/invoice";
 import * as commonFunc from "../../../utils/commonFunc";
 import IconI from "react-native-vector-icons/Ionicons";
 import * as Constance from "../../../utils/constants";
+import Loading from "../../../components/loading";
 
-const list = {
-    customerName: 'kavinda dilshan',
-    totalAmount: 25000,
-    invoiceDetails: [
-        {
-            woodType: 'මහෝගනී',
-            id: '1',
-            cubicFeet: '0.2',
-            amount: 2000
-        },
-        {
-            woodType: 'බුරුත',
-            id: '2',
-            cubicFeet: '0.2',
-            amount: 2000
-        },
-        {
-            woodType: 'මහෝගනී',
-            id: '3',
-            cubicFeet: '0.2',
-            amount: 2000
-        },
-        {
-            woodType: 'තේක්ක',
-            id: '4',
-            cubicFeet: '0.2',
-            amount: 2000
-        }
-    ]
-}
 const InvoiceDetailsBase = ({navigation, route}) => {
     const [woodType, setWoodType] = useState([]);
     const [selectedWoodDetails, setSelectedWoodDetails] = useState({});
     const [invoiceDetailsList, setInvoiceDetailsList] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [customerName,setCustomerName]=useState('kavinda');
-    const [totalAmount,setTotalAmount]=useState(30000);
+    const [customerName,setCustomerName]=useState('');
+    const [totalAmount,setTotalAmount]=useState('');
+    const [invoiceId,setInvoiceId]=useState();
 
     useEffect(async () => {
-        // setLoading(true);
+        setLoading(true);
+        setInvoiceId(route.params.invoiceId)
         await getInvoiceById(route.params.invoiceId)
     }, [])
 
     async function getInvoiceById(invoiceId) {
         await InvoiceServices.getInvoiceById(invoiceId)
             .then(response => {
-                if (response.invoiceDetails !== null) {
-                    // setInvoiceDetailsList(response.invoiceDetails);
-                    groupBy();
-                }
+                setCustomerName(response.customerName);
+                setTotalAmount(response.totalAmount.toFixed(2));
+                groupBy(response.invoiceDetails);
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
             })
-        // setLoading(false);
+        setLoading(false);
     }
 
-    const groupBy = () => {
+    const groupBy = (data) => {
 
         // this gives an object with dates as keys
-        const groups = list.invoiceDetails.reduce((groups, game) => {
+        const groups = data.reduce((groups, game) => {
             const woodType = game.woodType;
             if (!groups[woodType]) {
                 groups[woodType] = [];
@@ -96,7 +68,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const headerRightBtn = (
         <Button
             title="Pay List"
-            // onPress={toggleOverlay}
+            onPress={()=>navigation.navigate('PayList',{invoiceId:invoiceId})}
             containerStyle={styles.addNewButtonContainerStyle}
             buttonStyle={styles.addNewButtonStyle}
             titleStyle={styles.addNewButtonTitleStyle}
@@ -145,7 +117,6 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
                             textAlign={'right'}
-                            placeholder='Cubic Feet'
                             value={customerName}
                             disabled={true}
                         />
@@ -159,8 +130,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
                             textAlign={'right'}
-                            placeholder='Cubic Feet'
-                            value={`Rs. ${totalAmount.toFixed(2)}`}
+                            value={`Rs. ${totalAmount}`}
                             disabled={true}
                         />
                     </View>
@@ -184,9 +154,9 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                                 <View style={styles.listItemBody} key={j}>
                                     <View style={styles.listItemBodyItem}>
                                         <Text
-                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{`Item No ${j}`}</Text>
-                                        <Text
                                             style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.cubicFeet}</Text>
+                                        <Text
+                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.unitPrice.toFixed(2)}</Text>
                                         <Text
                                             style={[styles.listItemBodyItemText, {width: '40%'}]}>{(item.amount).toFixed(2)}</Text>
                                     </View>
@@ -200,6 +170,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                 </Card>
 
             </ScrollView>
+            <Loading isVisible={loading}/>
         </View>
 
     );

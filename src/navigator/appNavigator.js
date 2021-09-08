@@ -13,6 +13,7 @@ import ApproveScreen from '../screens/approve/base';
 import ProfileScreen from '../screens/profile/base';
 import AboutScreen from '../screens/about/base';
 import InvoiceDetailsBase from "../screens/invoice/details/base";
+import PayList from "../screens/invoice/payments/base";
 
 import * as Constants from '../utils/constants';
 import {useAuthState} from "../context";
@@ -77,6 +78,7 @@ const AppNavigator = () => {
                     <Stack.Screen name="Register" component={RegisterScreen}/>
                     <Stack.Screen name="AppStack" component={AppStack}/>
                     <Stack.Screen name="InvoiceDetails" component={InvoiceDetailsBase}/>
+                    <Stack.Screen name="PayList" component={PayList}/>
                     <Stack.Screen name="Profile" component={ProfileScreen}/>
                     <Stack.Screen name="About" component={AboutScreen}/>
                 </>

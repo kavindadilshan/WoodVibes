@@ -59,3 +59,15 @@ export async function getInvoicePaymentDetails(id){
     apiObject.body = null;
     return await ApiService.callApi(apiObject);
 }
+
+export async function deletePayRecord(id){
+    const apiObject = {};
+    apiObject.method = 'DELETE';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/payment/${id}/delete`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    return await ApiService.callApi(apiObject);
+}
