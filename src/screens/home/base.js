@@ -377,14 +377,14 @@ const HomeBase = ({navigation}) => {
                                         inputContainerStyle={{borderBottomWidth: 0}}
                                         textAlign={'right'}
                                         placeholder='Total Amount'
-                                        value={totalAmount}
+                                        value={`Rs. ${totalAmount}`}
                                         disabled={true}
                                     />
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                                     <View>
-                                        <Text>Discount</Text>
-                                        <Text style={{fontFamily: 'Amalee'}}>වට්ටම්</Text>
+                                        <Text>Discount (%)</Text>
+                                        <Text style={{fontFamily: 'Amalee'}}>වට්ටම් </Text>
                                     </View>
                                     <Input
                                         containerStyle={styles.inputContainerStyle}
@@ -405,7 +405,7 @@ const HomeBase = ({navigation}) => {
                                             containerStyle={{...styles.inputContainerStyle, width: '100%'}}
                                             inputContainerStyle={{borderBottomWidth: 0}}
                                             placeholder='Net Amount'
-                                            value={netAmount}
+                                            value={`Rs. ${netAmount}`}
                                             disabled={true}
                                         />
                                     </View>
