@@ -44,6 +44,7 @@ const InvoiceBase = ({navigation}) => {
                 await InvoiceServices.deleteInvoice(selectedInvoice)
                     .then(async response => {
                         commonFunc.notifyMessage('Invoice delete successfully', 1);
+                        setInvoiceList([]);
                         await getAllInvoiceList();
                     })
                     .catch(error => {
