@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {ScrollView, StyleSheet, Text, View, Dimensions} from 'react-native';
+import {ScrollView, StyleSheet, Text, View, Dimensions, TouchableOpacity} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
 import {Picker} from '@react-native-picker/picker';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
@@ -12,6 +12,8 @@ import * as CustomerServices from '../../services/customer';
 import * as InvoiceServices from '../../services/invoice';
 import * as commonFunc from "../../utils/commonFunc";
 import {add} from "react-native-reanimated";
+import Loading from "../../components/loading";
+import AlertMessage from "../../components/AlertMessage";
 
 const screenHeight = Dimensions.get("screen").height;
 let prev = 0;
@@ -37,6 +39,9 @@ const HomeBase = ({navigation}) => {
     const [groupList, setGroupList] = useState([]);
     const [visible, setVisible] = useState(false);
     const [visibleIndex, setVisibleIndex] = useState();
+    const [showAlert, setShowAlert] = useState(false);
+    const [editCostVisible,setEditCostVisible]=useState(false);
+    const [newCost,setNewCost]=useState();
 
     useEffect(async () => {
         await getWoodTypeLists();
@@ -82,12 +87,12 @@ const HomeBase = ({navigation}) => {
     }
 
     async function saveInvoiceHandler() {
-        let list=[];
-        addingList.map((item)=>{
+        let list = [];
+        addingList.map((item) => {
             list.push({
-                woodMeasurementCostId:item.woodMeasurementCostId,
-                cubicFeet:Number(item.cubicQuantity),
-                amount:Number(item.totalAmount)
+                woodMeasurementCostId: item.woodMeasurementCostId,
+                cubicFeet: Number(item.cubicQuantity),
+                amount: Number(item.totalAmount)
             })
         })
 
@@ -103,7 +108,7 @@ const HomeBase = ({navigation}) => {
         }
         await InvoiceServices.saveInvoice(data)
             .then(commonFunc.notifyMessage('Invoice saved successfully!', 1))
-            .catch(error=>{
+            .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
             })
     }
@@ -124,7 +129,7 @@ const HomeBase = ({navigation}) => {
                 setEditable(true);
 
                 addingList.push({
-                    woodMeasurementCostId:selectedWoodTypeId,
+                    woodMeasurementCostId: selectedWoodTypeId,
                     woodType: selectedWoodDetails.woodType,
                     cubicQuantity: cubicQuantity.toFixed(2),
                     unitPrice: selectedWoodDetails.cost,
@@ -133,10 +138,10 @@ const HomeBase = ({navigation}) => {
 
                 let totalLastAmount = 0;
                 for (let i = 0; i < addingList.length; i++) {
-                    totalLastAmount+=Number(addingList[i].totalAmount)
+                    totalLastAmount += Number(addingList[i].totalAmount)
                 }
                 setTotalAmount(totalLastAmount.toString());
-                setNetAmount((totalLastAmount-totalLastAmount*discount/100).toString())
+                setNetAmount((totalLastAmount - totalLastAmount * discount / 100).toString())
                 // setAddingList(list);
                 setAsChanged(false);
                 // console.log(addingList);
@@ -193,7 +198,7 @@ const HomeBase = ({navigation}) => {
         for (let i = 0; i < list.length; i++) {
             for (let j = 0; j < list[i].subList.length; j++) {
                 list2.push({
-                    woodMeasurementCostId:list[i].subList[j].woodMeasurementCostId,
+                    woodMeasurementCostId: list[i].subList[j].woodMeasurementCostId,
                     woodType: list[i].subList[j].woodType,
                     cubicQuantity: list[i].subList[j].cubicQuantity,
                     unitPrice: list[i].subList[j].unitPrice,
@@ -204,7 +209,7 @@ const HomeBase = ({navigation}) => {
 
         let totalLastAmount = 0;
         for (let i = 0; i < list2.length; i++) {
-            totalLastAmount+=Number(list2[i].totalAmount)
+            totalLastAmount += Number(list2[i].totalAmount)
         }
 
         setTimeout(() => {
@@ -212,7 +217,7 @@ const HomeBase = ({navigation}) => {
             setGroupList(list);
             setAddingList(list2);
             setTotalAmount(totalLastAmount.toString());
-            setNetAmount((totalLastAmount-totalLastAmount*discount/100).toString())
+            setNetAmount((totalLastAmount - totalLastAmount * discount / 100).toString())
         }, 100)
     }
 
@@ -232,6 +237,38 @@ const HomeBase = ({navigation}) => {
         setVisible(!visible);
         setVisibleIndex(i)
     };
+
+    async function editWoodCostHandler(item) {
+        switch (item) {
+            case 'yes':
+                setNewCost('');
+                setShowAlert(false);
+                setEditCostVisible(false);
+                setLoading(true);
+                const data={
+                    id:selectedWoodDetails.id,
+                    cost:newCost
+                }
+                await WoodServices.editCostById(data)
+                    .then(async response => {
+                        setWoodTypeList([])
+                        setLoading(false);
+                        commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
+                        await getWoodTypeLists();
+                    })
+                    .catch(error => {
+                        setLoading(false);
+                        commonFunc.notifyMessage(error.message, 0);
+                    })
+                break;
+            case 'no':
+                setShowAlert(false);
+                setEditCostVisible(false);
+                break;
+            default:
+                break;
+        }
+    }
 
 
     return (
@@ -289,13 +326,14 @@ const HomeBase = ({navigation}) => {
                                         <Text>Wood type</Text>
                                         <Text style={{fontFamily: 'Amalee'}}>දැව වර්ගය</Text>
                                     </View>
+
                                     <View style={styles.pickerConatiner}>
                                         <Picker
                                             mode='dropdown'
                                             dropdownIconColor={Constants.COLORS.BLACK}
                                             selectedValue={selectedLanguage}
                                             onValueChange={(itemValue, itemIndex) => {
-                                                setSelectedWoodDetails(woodTypeList[itemIndex]);
+                                                setSelectedWoodDetails(woodTypeList.length!==0?woodTypeList[itemIndex]:{});
                                                 setSelectedWoodTypeId(itemValue);
                                                 setEditable(true);
                                                 setLength('');
@@ -308,12 +346,19 @@ const HomeBase = ({navigation}) => {
                                     </View>
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
-                                    <View>
-                                        <Text>Unit price</Text>
-                                        <Text style={{fontFamily: 'Amalee'}}>ඒකක මිල</Text>
+
+                                    <View
+                                        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                                        <View style={{flexDirection: 'column'}}>
+                                            <Text>Unit price</Text>
+                                            <Text style={{fontFamily: 'Amalee'}}>ඒකක මිල</Text>
+                                        </View>
+                                        <TouchableOpacity style={styles.miniButton} onPress={()=>setEditCostVisible(!editCostVisible)}>
+                                            <Text style={{color: 'white'}}>Edit</Text>
+                                        </TouchableOpacity>
                                     </View>
                                     <Text
-                                        style={{fontSize: 20}}>Rs. {selectedWoodDetails.cost ? selectedWoodDetails.cost : 0}</Text>
+                                        style={{fontSize: 20}}>Rs. {selectedWoodDetails.cost ? (selectedWoodDetails.cost).toFixed(2) : 0}</Text>
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                                     <View>
@@ -429,7 +474,7 @@ const HomeBase = ({navigation}) => {
                                     buttonStyle={styles.buttonStyle}
                                     titleStyle={styles.buttonTitleStyle}
                                     disabled={payAmount === undefined || payAmount === ''}
-                                    onPress={()=>saveInvoiceHandler()}
+                                    onPress={() => saveInvoiceHandler()}
                                 />
                             </Card>
                         </ScrollView>
@@ -535,7 +580,60 @@ const HomeBase = ({navigation}) => {
 
                 </View>
             </ScrollView>
+            <Loading isVisible={loading}/>
+            <AlertMessage
+                show={showAlert}
+                title={"Do you want to edit wood cost?"}
+                onCancelPressed={() => editWoodCostHandler('yes')}
+                onConfirmPressed={() => editWoodCostHandler('no')}
+                cancelText={'Yes'}
+                confirmText={'Not Now'}
+            />
 
+            <Overlay
+                isVisible={editCostVisible}
+                overlayStyle={styles.overlay}
+                onBackdropPress={()=>setEditCostVisible(!editCostVisible)}>
+                <Card containerStyle={styles.overlayCard}>
+                    <Card.Title style={{fontSize: 17}}>
+                         Wood Cost | දැව පිරිවැය
+                    </Card.Title>
+                    <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Old Wood Cost</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>පැරණි දැව පිරිවැය</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            value={`Rs. ${selectedWoodDetails.cost ? (selectedWoodDetails.cost).toFixed(2) : 0}`}
+                            disabled={true}
+                        />
+                    </View>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>New Wood Cost</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>නව දැව පිරිවැය</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder="Enter here..."
+                            value={newCost}
+                            onChangeText={val => setNewCost(val)}
+                            keyboardType='decimal-pad'
+                        />
+                    </View>
+                    <Button
+                        title="Edit | සංස්කරණය කරන්න"
+                        onPress={()=>setShowAlert(true)}
+                        containerStyle={styles.buttonContainerStyle}
+                        buttonStyle={styles.buttonStyle}
+                        titleStyle={styles.buttonTitleStyle}
+                    />
+                </Card>
+            </Overlay>
         </View>
     )
 };
@@ -655,6 +753,22 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     listItemCloseIcon: {},
+    miniButton: {
+        width: 50,
+        height: 25,
+        backgroundColor: Constants.COLORS.PRIMARY_BLUE,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 15
+    },
+    overlayCard: {
+        borderRadius: 10,
+        backgroundColor: Constants.COLORS.BACKGROUND_BLUE,
+        borderWidth: 0,
+        marginBottom: 15,
+    },
+
 });
 
 export default HomeBase;

@@ -47,3 +47,15 @@ export async function getAllWoodCostById(data){
     apiObject.body = null;
     return await ApiService.callApi(apiObject);
 }
+
+export async function editCostById(data){
+    const apiObject = {};
+    apiObject.method = 'PUT';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/wood-cost/edit/${data.id}?cost=${data.cost}`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    return await ApiService.callApi(apiObject);
+}
