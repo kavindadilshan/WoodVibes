@@ -36,7 +36,7 @@ const PayList = ({navigation, route}) => {
 
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
     }
@@ -52,7 +52,7 @@ const PayList = ({navigation, route}) => {
                         await getPayList(invoiceId);
                     })
                     .catch(error => {
-                        commonFunc.notifyMessage(error.message, 0);
+                        commonFunc.notifyMessage('You connection was interrupted', 0);
                     })
                 break;
             case 'no':

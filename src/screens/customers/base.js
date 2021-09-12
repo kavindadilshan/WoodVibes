@@ -36,7 +36,7 @@ const CustomerBase = ({navigation}) => {
                 setCustomerList(response.customers);
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
     }
@@ -78,7 +78,7 @@ const CustomerBase = ({navigation}) => {
                 commonFunc.notifyMessage("Customer has been successfully created!", 1);
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
                 setLoading(false);
             })
     }

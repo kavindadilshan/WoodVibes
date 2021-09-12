@@ -13,6 +13,7 @@ import * as commonFunc from "../../utils/commonFunc";
 import Loading from "../../components/loading";
 import AlertMessage from "../../components/AlertMessage";
 import DropDown from "../../components/dropDown";
+import {CommonActions} from "@react-navigation/native";
 
 const screenHeight = Dimensions.get("screen").height;
 
@@ -38,6 +39,7 @@ const HomeBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
     const [visibleIndex, setVisibleIndex] = useState();
     const [showAlert, setShowAlert] = useState(false);
+    const [showAlert2, setShowAlert2] = useState(false);
     const [editCostVisible, setEditCostVisible] = useState(false);
     const [newCost, setNewCost] = useState();
     const [selectedCustomerList, setSelectedCustomerList] = useState([]);
@@ -66,7 +68,7 @@ const HomeBase = ({navigation}) => {
                 setWoodTypeList(list);
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
     }
 
@@ -77,7 +79,7 @@ const HomeBase = ({navigation}) => {
                 setCustomerList(response.customers);
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
     }
 
@@ -93,7 +95,7 @@ const HomeBase = ({navigation}) => {
                 setNetAmount('')
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
     }
 
@@ -121,7 +123,7 @@ const HomeBase = ({navigation}) => {
         await InvoiceServices.saveInvoice(data)
             .then(commonFunc.notifyMessage('Invoice saved successfully!', 1))
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false)
     }
@@ -276,7 +278,7 @@ const HomeBase = ({navigation}) => {
                     })
                     .catch(error => {
                         setLoading(false);
-                        commonFunc.notifyMessage(error.message, 0);
+                        commonFunc.notifyMessage('You connection was interrupted', 0);
                     })
                 break;
             case 'no':
@@ -299,15 +301,15 @@ const HomeBase = ({navigation}) => {
                         <View style={styles.headerRight}>
                             <IconI
                                 name='person-circle-outline'
-                                size={35}
-                                onPress={profileOnPress}
+                                size={37}
+                                onPress={aboutOnPress}
                                 style={styles.headerIcon}
                                 color={Constants.COLORS.PLACEHOLDER_ASH}
                             />
                             <IconI
-                                name='information-circle-outline'
-                                size={37}
-                                onPress={aboutOnPress}
+                                name='log-out-outline'
+                                size={35}
+                                onPress={()=>setShowAlert2(true)}
                                 style={[styles.headerIcon, {marginLeft: 10}]}
                                 color={Constants.COLORS.PLACEHOLDER_ASH}
                             />
@@ -693,6 +695,25 @@ const HomeBase = ({navigation}) => {
                     />
                 </Card>
             </Overlay>
+            <AlertMessage
+                show={showAlert2}
+                title={"Do you want to logout?"}
+                onCancelPressed={() => {
+                    setShowAlert2(false)
+                    AsyncStorage.clear();
+                    navigation.dispatch(
+                        CommonActions.reset({
+                            index: 1,
+                            routes: [
+                                { name: 'Login' },
+                            ],
+                        })
+                    );
+                }}
+                onConfirmPressed={() => setShowAlert2(false)}
+                cancelText={'Yes'}
+                confirmText={'Not Now'}
+            />
         </View>
     )
 };

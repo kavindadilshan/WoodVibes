@@ -68,11 +68,11 @@ const LoginBase = ({navigation}) => {
                         })
                     );
                 } else {
-                    commonFunc.notifyMessage(response.message, 0);
+                    commonFunc.notifyMessage('Incorrect username or password', 0);
                 }
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
     }

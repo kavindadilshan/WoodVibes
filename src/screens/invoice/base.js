@@ -33,7 +33,7 @@ const InvoiceBase = ({navigation}) => {
                 setInvoiceList(response);
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
     }
@@ -50,7 +50,7 @@ const InvoiceBase = ({navigation}) => {
                         await getAllInvoiceList();
                     })
                     .catch(error => {
-                        commonFunc.notifyMessage(error.message, 0);
+                        commonFunc.notifyMessage('You connection was interrupted', 0);
                     })
                 break;
             case 'no':
@@ -65,7 +65,7 @@ const InvoiceBase = ({navigation}) => {
         <View style={styles.container}>
             <TabHeader title='Invoice'/>
             <ScrollView contentContainerStyle={{paddingBottom: 10}}>
-                {Object.keys(invoiceList).map((item, i) => (
+                {invoiceList && Object.keys(invoiceList).map((item, i) => (
                     invoiceList[item].id && (
                         <Card containerStyle={styles.listCard} key={i}>
                             <View style={{

@@ -35,7 +35,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                 groupBy(response.invoiceDetails);
             })
             .catch(error => {
-                commonFunc.notifyMessage(error.message, 0);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
     }
