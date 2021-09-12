@@ -13,8 +13,9 @@ export const COLORS = {
   BACKGROUND_PURPLE:'#AED6F1',
   LIME_GREEN: '#00FF00',
   DARK_GREEN:'#186A3B',
+  THEME_COLOR:'#FFFEEC'
 };
-export const APP_NAME = 'WoodVibe';
+export const APP_NAME = 'WoodVibes';
 export const AGENT_CONTACT = '0702177781';
 export const CLIENT_NAME = 'admin';
 export const CLIENT_SECRET = '';
