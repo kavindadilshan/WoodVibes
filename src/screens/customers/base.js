@@ -234,6 +234,7 @@ const styles = StyleSheet.create({
     },
     overlay: {
         borderRadius: 10,
+        width:'95%'
     },
     overlayCard: {
         borderRadius: 10,

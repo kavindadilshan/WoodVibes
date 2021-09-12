@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, Fragment} from 'react';
 import {ScrollView, StyleSheet, Text, View, Dimensions, TouchableOpacity} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
 import {Picker} from '@react-native-picker/picker';
@@ -14,9 +14,46 @@ import * as commonFunc from "../../utils/commonFunc";
 import {add} from "react-native-reanimated";
 import Loading from "../../components/loading";
 import AlertMessage from "../../components/AlertMessage";
+import SearchableDropdown from 'react-native-searchable-dropdown';
+import DropDown from "../../components/dropDown";
 
 const screenHeight = Dimensions.get("screen").height;
 let prev = 0;
+
+let items = [
+    {
+        id: 1,
+        name: 'JavaScript',
+    },
+    {
+        id: 2,
+        name: 'Java',
+    },
+    {
+        id: 3,
+        name: 'Ruby',
+    },
+    {
+        id: 4,
+        name: 'React Native',
+    },
+    {
+        id: 5,
+        name: 'PHP',
+    },
+    {
+        id: 6,
+        name: 'Python',
+    },
+    {
+        id: 7,
+        name: 'Go',
+    },
+    {
+        id: 8,
+        name: 'Swift',
+    },
+];
 
 const HomeBase = ({navigation}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
@@ -40,8 +77,11 @@ const HomeBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
     const [visibleIndex, setVisibleIndex] = useState();
     const [showAlert, setShowAlert] = useState(false);
-    const [editCostVisible,setEditCostVisible]=useState(false);
-    const [newCost,setNewCost]=useState();
+    const [editCostVisible, setEditCostVisible] = useState(false);
+    const [newCost, setNewCost] = useState();
+    const [selectedCustomerList, setSelectedCustomerList] = useState([]);
+    const [selectedWoodTypeList, setSelectedWoodTypeList] = useState([]);
+    const [selectedWoodCost, setSelectedWoodCost] = useState();
 
     useEffect(async () => {
         await getWoodTypeLists();
@@ -52,7 +92,15 @@ const HomeBase = ({navigation}) => {
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
         await WoodServices.getAllWoodCost(factoryId)
             .then(response => {
-                setWoodTypeList(response.woodMeasurementCosts);
+                const list = [];
+                response.woodMeasurementCosts.map((items) => {
+                    list.push({
+                        id: items.id,
+                        cost: items.cost,
+                        name: items.woodType
+                    })
+                })
+                setWoodTypeList(list);
             })
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
@@ -114,7 +162,9 @@ const HomeBase = ({navigation}) => {
     }
 
     const addOnPress = () => {
-        if (selectedWoodDetails.cost === undefined) {
+        if (selectedCustomerId ===undefined){
+            commonFunc.notifyMessage('Please Select Customer', 2);
+        }else if (selectedWoodCost === undefined) {
             commonFunc.notifyMessage('Please Select Wood Type', 2);
         } else if (length === undefined || length === '') {
             commonFunc.notifyMessage('Please Enter Length', 2);
@@ -123,16 +173,16 @@ const HomeBase = ({navigation}) => {
         } else {
             if (asChanged) {
                 const cubicQuantity = (length * (circumference / 12));
-                const totalValue = (selectedWoodDetails.cost * cubicQuantity).toFixed();
+                const totalValue = (selectedWoodCost * cubicQuantity).toFixed();
                 setTotalAmount(totalValue.toString());
                 setNetAmount(totalValue.toString());
                 setEditable(true);
 
                 addingList.push({
                     woodMeasurementCostId: selectedWoodTypeId,
-                    woodType: selectedWoodDetails.woodType,
+                    woodType: selectedWoodDetails.name,
                     cubicQuantity: cubicQuantity.toFixed(2),
-                    unitPrice: selectedWoodDetails.cost,
+                    unitPrice: selectedWoodCost,
                     totalAmount: totalValue
                 })
 
@@ -245,15 +295,17 @@ const HomeBase = ({navigation}) => {
                 setShowAlert(false);
                 setEditCostVisible(false);
                 setLoading(true);
-                const data={
-                    id:selectedWoodDetails.id,
-                    cost:newCost
+                const data = {
+                    id: selectedWoodDetails.id,
+                    cost: newCost
                 }
                 await WoodServices.editCostById(data)
                     .then(async response => {
                         setWoodTypeList([])
+                        setSelectedWoodTypeList({})
                         setLoading(false);
                         commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
+                        setSelectedWoodCost(Number(newCost));
                         await getWoodTypeLists();
                     })
                     .catch(error => {
@@ -273,7 +325,8 @@ const HomeBase = ({navigation}) => {
 
     return (
         <View style={{flexGrow: 1}}>
-            <ScrollView nestedScrollEnabled={true}>
+
+            <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
                 <View style={styles.container}>
                     <View style={styles.headerContainer}>
                         <Text style={styles.title}>{Constants.APP_NAME}</Text>
@@ -295,7 +348,8 @@ const HomeBase = ({navigation}) => {
                         </View>
                     </View>
                     <View style={{height: addingList.length !== 0 ? screenHeight / 100 * 60 : '100%'}}>
-                        <ScrollView contentContainerStyle={{paddingBottom: 10}} nestedScrollEnabled={true}>
+                        <ScrollView contentContainerStyle={{paddingBottom: 10}} nestedScrollEnabled={true}
+                                    keyboardShouldPersistTaps="handled">
                             <Card containerStyle={styles.orderCard}>
                                 <Card.Title style={{fontSize: 18}}>New order | නව ඇණවුම්</Card.Title>
                                 <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
@@ -305,47 +359,81 @@ const HomeBase = ({navigation}) => {
                                         <Text style={{fontFamily: 'Amalee'}}>ගණුදෙනුකරු</Text>
                                     </View>
                                     <View style={styles.pickerConatiner}>
-                                        <Picker
-                                            mode='dropdown'
-                                            dropdownIconColor={Constants.COLORS.BLACK}
-                                            selectedValue={selectedLanguage}
-                                            onValueChange={(itemValue, itemIndex) => {
-                                                setSelectedCustomerId(itemValue);
+                                        {/*<Picker*/}
+                                        {/*    mode='dropdown'*/}
+                                        {/*    dropdownIconColor={Constants.COLORS.BLACK}*/}
+                                        {/*    selectedValue={selectedLanguage}*/}
+                                        {/*    onValueChange={(itemValue, itemIndex) => {*/}
+                                        {/*        setSelectedCustomerId(itemValue);*/}
+                                        {/*        setEditable(true);*/}
+                                        {/*        setLength('');*/}
+                                        {/*        setCircumference('');*/}
+                                        {/*    }}>*/}
+                                        {/*    {customerList.map((items, i) => (*/}
+                                        {/*        <Picker.Item label={items.name} value={items.id} key={i}/>*/}
+                                        {/*    ))}*/}
+                                        {/*</Picker>*/}
+                                        <DropDown
+                                            onItemSelect={(item) => {
+                                                setSelectedCustomerId(item.id);
+                                                setSelectedCustomerList(item)
                                                 setEditable(true);
                                                 setLength('');
                                                 setCircumference('');
-                                            }}>
-                                            {customerList.map((items, i) => (
-                                                <Picker.Item label={items.name} value={items.id} key={i}/>
-                                            ))}
-                                        </Picker>
+                                            }}
+                                            selectedItems={selectedCustomerList}
+                                            onRemoveItem={(item, index) => {
+                                                const items = selectedCustomerList.filter((sitem) => sitem.id !== item.id);
+                                                setSelectedCustomerList(items)
+                                            }}
+                                            items={customerList}
+                                            placeholder={"Select Customer"}
+                                        />
                                     </View>
                                 </View>
-                                <View style={styles.cardItemConatiner}>
+                                <View style={[styles.cardItemConatiner, {marginTop: 10}]}>
                                     <View>
                                         <Text>Wood type</Text>
                                         <Text style={{fontFamily: 'Amalee'}}>දැව වර්ගය</Text>
                                     </View>
 
                                     <View style={styles.pickerConatiner}>
-                                        <Picker
-                                            mode='dropdown'
-                                            dropdownIconColor={Constants.COLORS.BLACK}
-                                            selectedValue={selectedLanguage}
-                                            onValueChange={(itemValue, itemIndex) => {
-                                                setSelectedWoodDetails(woodTypeList.length!==0?woodTypeList[itemIndex]:{});
-                                                setSelectedWoodTypeId(itemValue);
+                                        {/*<Picker*/}
+                                        {/*    mode='dropdown'*/}
+                                        {/*    dropdownIconColor={Constants.COLORS.BLACK}*/}
+                                        {/*    selectedValue={selectedLanguage}*/}
+                                        {/*    onValueChange={(itemValue, itemIndex) => {*/}
+                                        {/*        setSelectedWoodDetails(woodTypeList.length!==0?woodTypeList[itemIndex]:{});*/}
+                                        {/*        setSelectedWoodTypeId(itemValue);*/}
+                                        {/*        setEditable(true);*/}
+                                        {/*        setLength('');*/}
+                                        {/*        setCircumference('');*/}
+                                        {/*    }}>*/}
+                                        {/*    {woodTypeList.map((item, i) => (*/}
+                                        {/*        <Picker.Item label={item.woodType} value={item.id} key={i}/>*/}
+                                        {/*    ))}*/}
+                                        {/*</Picker>*/}
+                                        <DropDown
+                                            onItemSelect={(item) => {
+                                                setSelectedWoodDetails(woodTypeList.length !== 0 ? item : {});
+                                                setSelectedWoodTypeId(item.id);
                                                 setEditable(true);
                                                 setLength('');
                                                 setCircumference('');
-                                            }}>
-                                            {woodTypeList.map((item, i) => (
-                                                <Picker.Item label={item.woodType} value={item.id} key={i}/>
-                                            ))}
-                                        </Picker>
+                                                setSelectedWoodTypeList(item);
+                                                setSelectedWoodCost(item.cost)
+                                            }}
+                                            selectedItems={selectedWoodTypeList}
+                                            onRemoveItem={(item, index) => {
+                                                const items = selectedWoodTypeList.filter((sitem) => sitem.id !== item.id);
+                                                setSelectedWoodTypeList(items)
+                                            }}
+                                            items={woodTypeList}
+                                            placeholder={"Select Wood Type"}
+                                        />
                                     </View>
                                 </View>
-                                <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                                <View style={[styles.cardItemConatiner, {marginVertical: 15}]}>
 
                                     <View
                                         style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
@@ -353,12 +441,17 @@ const HomeBase = ({navigation}) => {
                                             <Text>Unit price</Text>
                                             <Text style={{fontFamily: 'Amalee'}}>ඒකක මිල</Text>
                                         </View>
-                                        <TouchableOpacity style={styles.miniButton} onPress={()=>setEditCostVisible(!editCostVisible)}>
-                                            <Text style={{color: 'white'}}>Edit</Text>
-                                        </TouchableOpacity>
+
+                                        {selectedWoodTypeList.length !== 0 && (
+                                            <TouchableOpacity style={styles.miniButton}
+                                                              onPress={() => setEditCostVisible(!editCostVisible)}>
+                                                <Text style={{color: 'white'}}>Edit</Text>
+                                            </TouchableOpacity>
+                                        )}
+
                                     </View>
                                     <Text
-                                        style={{fontSize: 20}}>Rs. {selectedWoodDetails.cost ? (selectedWoodDetails.cost).toFixed(2) : 0}</Text>
+                                        style={{fontSize: 20}}>Rs. {selectedWoodCost ? (selectedWoodCost).toFixed(2) : 0}</Text>
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                                     <View>
@@ -593,10 +686,10 @@ const HomeBase = ({navigation}) => {
             <Overlay
                 isVisible={editCostVisible}
                 overlayStyle={styles.overlay}
-                onBackdropPress={()=>setEditCostVisible(!editCostVisible)}>
+                onBackdropPress={() => setEditCostVisible(!editCostVisible)}>
                 <Card containerStyle={styles.overlayCard}>
                     <Card.Title style={{fontSize: 17}}>
-                         Wood Cost | දැව පිරිවැය
+                        Wood Cost | දැව පිරිවැය
                     </Card.Title>
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -607,7 +700,7 @@ const HomeBase = ({navigation}) => {
                         <Input
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
-                            value={`Rs. ${selectedWoodDetails.cost ? (selectedWoodDetails.cost).toFixed(2) : 0}`}
+                            value={`Rs. ${selectedWoodCost ? (selectedWoodCost).toFixed(2) : 0}`}
                             disabled={true}
                         />
                     </View>
@@ -627,7 +720,7 @@ const HomeBase = ({navigation}) => {
                     </View>
                     <Button
                         title="Edit | සංස්කරණය කරන්න"
-                        onPress={()=>setShowAlert(true)}
+                        onPress={() => setShowAlert(true)}
                         containerStyle={styles.buttonContainerStyle}
                         buttonStyle={styles.buttonStyle}
                         titleStyle={styles.buttonTitleStyle}
@@ -674,8 +767,9 @@ const styles = StyleSheet.create({
     },
     cardItemConatiner: {
         justifyContent: 'space-between',
-        alignItems: 'center',
+        // alignItems: 'center',
         flexDirection: 'row',
+        margin: 2
     },
     pickerConatiner: {
         width: '45%',
@@ -768,7 +862,10 @@ const styles = StyleSheet.create({
         borderWidth: 0,
         marginBottom: 15,
     },
-
+    overlay: {
+        borderRadius: 10,
+        backgroundColor:'transparent'
+    },
 });
 
 export default HomeBase;
