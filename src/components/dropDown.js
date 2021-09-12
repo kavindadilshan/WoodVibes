@@ -34,12 +34,14 @@ const DropDown = (props) => {
                 textInputProps={
                     {
                         placeholder: props.placeholder,
+                        placeholderTextColor:Constants.COLORS.ICON_ASH,
                         underlineColorAndroid: "transparent",
                         style: {
                             padding: 12,
                             borderRadius: 5,
                             height: 45,
-                            backgroundColor: Constants.COLORS.WHITE
+                            backgroundColor: Constants.COLORS.WHITE,
+                            color:Constants.COLORS.BLACK
                         },
                         // onTextChange: text => this.state.text
                     }

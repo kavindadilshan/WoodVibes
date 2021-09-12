@@ -19,10 +19,12 @@ const InvoiceBase = ({navigation}) => {
     const [loading, setLoading] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState();
 
-    useEffect(async () => {
-        setLoading(true);
-        await getAllInvoiceList();
-    }, [])
+    useEffect( () => {
+        navigation.addListener('focus', async () => {
+            setLoading(true);
+            await getAllInvoiceList();
+        });
+    }, [navigation])
 
     async function getAllInvoiceList() {
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);

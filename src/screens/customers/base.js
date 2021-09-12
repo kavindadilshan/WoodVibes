@@ -234,7 +234,10 @@ const styles = StyleSheet.create({
     },
     overlay: {
         borderRadius: 10,
-        width:'95%'
+        backgroundColor: 'transparent',
+        shadowColor:'transparent',
+        borderWidth:0,
+        width:'100%'
     },
     overlayCard: {
         borderRadius: 10,

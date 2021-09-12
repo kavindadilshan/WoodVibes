@@ -1,59 +1,20 @@
-import React, {useState, useEffect, Fragment} from 'react';
-import {ScrollView, StyleSheet, Text, View, Dimensions, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
-import {Picker} from '@react-native-picker/picker';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
+import {StorageStrings} from '../../utils/constants';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {StorageStrings} from "../../utils/constants";
 import * as WoodServices from '../../services/wood';
 import * as CustomerServices from '../../services/customer';
 import * as InvoiceServices from '../../services/invoice';
 import * as commonFunc from "../../utils/commonFunc";
-import {add} from "react-native-reanimated";
 import Loading from "../../components/loading";
 import AlertMessage from "../../components/AlertMessage";
-import SearchableDropdown from 'react-native-searchable-dropdown';
 import DropDown from "../../components/dropDown";
 
 const screenHeight = Dimensions.get("screen").height;
-let prev = 0;
-
-let items = [
-    {
-        id: 1,
-        name: 'JavaScript',
-    },
-    {
-        id: 2,
-        name: 'Java',
-    },
-    {
-        id: 3,
-        name: 'Ruby',
-    },
-    {
-        id: 4,
-        name: 'React Native',
-    },
-    {
-        id: 5,
-        name: 'PHP',
-    },
-    {
-        id: 6,
-        name: 'Python',
-    },
-    {
-        id: 7,
-        name: 'Go',
-    },
-    {
-        id: 8,
-        name: 'Swift',
-    },
-];
 
 const HomeBase = ({navigation}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
@@ -63,7 +24,7 @@ const HomeBase = ({navigation}) => {
     const [length, setLength] = useState();
     const [circumference, setCircumference] = useState();
     const [totalAmount, setTotalAmount] = useState();
-    const [discount, setDiscount] = useState('0');
+    const [discount, setDiscount] = useState('');
     const [netAmount, setNetAmount] = useState();
     const [payAmount, setPayAmount] = useState();
     const [editable, setEditable] = useState(false);
@@ -84,9 +45,11 @@ const HomeBase = ({navigation}) => {
     const [selectedWoodCost, setSelectedWoodCost] = useState();
 
     useEffect(async () => {
+        navigation.addListener('focus', async () => {
+            await getAllCustomersList();
+        });
         await getWoodTypeLists();
-        await getAllCustomersList();
-    }, [])
+    }, [navigation])
 
     async function getWoodTypeLists() {
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
@@ -154,17 +117,19 @@ const HomeBase = ({navigation}) => {
             amount: Number(payAmount),
             invoiceDetails: list
         }
+        setLoading(true)
         await InvoiceServices.saveInvoice(data)
             .then(commonFunc.notifyMessage('Invoice saved successfully!', 1))
             .catch(error => {
                 commonFunc.notifyMessage(error.message, 0);
             })
+        setLoading(false)
     }
 
     const addOnPress = () => {
-        if (selectedCustomerId ===undefined){
+        if (selectedCustomerId === undefined) {
             commonFunc.notifyMessage('Please Select Customer', 2);
-        }else if (selectedWoodCost === undefined) {
+        } else if (selectedWoodCost === undefined) {
             commonFunc.notifyMessage('Please Select Wood Type', 2);
         } else if (length === undefined || length === '') {
             commonFunc.notifyMessage('Please Enter Length', 2);
@@ -172,7 +137,8 @@ const HomeBase = ({navigation}) => {
             commonFunc.notifyMessage('Please Enter Circumference', 2);
         } else {
             if (asChanged) {
-                const cubicQuantity = (length * (circumference / 12));
+                // const cubicQuantity = (length * (circumference / 12));
+                const cubicQuantity = ((circumference * circumference) * length) / 2304
                 const totalValue = (selectedWoodCost * cubicQuantity).toFixed();
                 setTotalAmount(totalValue.toString());
                 setNetAmount(totalValue.toString());
@@ -515,7 +481,7 @@ const HomeBase = ({navigation}) => {
                                         inputContainerStyle={{borderBottomWidth: 0}}
                                         textAlign={'right'}
                                         placeholder='Total Amount'
-                                        value={`Rs. ${totalAmount}`}
+                                        value={`Rs. ${totalAmount ? totalAmount : 0}`}
                                         disabled={true}
                                     />
                                 </View>
@@ -543,7 +509,7 @@ const HomeBase = ({navigation}) => {
                                             containerStyle={{...styles.inputContainerStyle, width: '100%'}}
                                             inputContainerStyle={{borderBottomWidth: 0}}
                                             placeholder='Net Amount'
-                                            value={`Rs. ${netAmount}`}
+                                            value={`Rs. ${netAmount ? netAmount : 0}`}
                                             disabled={true}
                                         />
                                     </View>
@@ -864,7 +830,10 @@ const styles = StyleSheet.create({
     },
     overlay: {
         borderRadius: 10,
-        backgroundColor:'transparent'
+        backgroundColor: 'transparent',
+        shadowColor: 'transparent',
+        borderWidth: 0,
+        width: '100%'
     },
 });
 
