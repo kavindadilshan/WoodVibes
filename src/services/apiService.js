@@ -7,6 +7,7 @@ import qs from "qs";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import * as constants from "../utils/constants";
+import {CommonActions} from "@react-navigation/native";
 
 
 export const callApi = async (apiObject) => {
@@ -23,7 +24,7 @@ export const callApi = async (apiObject) => {
         'Content-Type': apiObject.urlencoded ? 'application/x-www-form-urlencoded' : apiObject.multipart ? 'multipart/form-data' : 'application/json',
     };
     if (apiObject.authentication) {
-        let access_token =await AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);
+        let access_token = await AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);
         if (access_token) {
             headers.Authorization = `Bearer ${access_token}`;
         }
@@ -32,11 +33,15 @@ export const callApi = async (apiObject) => {
         headers.Authorization = 'Basic ' + btoa('' + constants.CLIENT_NAME + ':' + constants.CLIENT_SECRET + '');
     }
 
+    if (apiObject.isRefreshToken) {
+        headers.isRefreshToken = true
+    }
+
 
     const url = `${apiConfig.serverUrl}/${apiConfig.basePath}/${apiObject.endpoint}`;
     let result;
 
-    await axios[method](url, method !== 'get' && method !== 'delete'? body : {headers: headers}, {headers: headers})
+    await axios[method](url, method !== 'get' && method !== 'delete' ? body : {headers: headers}, {headers: headers})
         .then(async response => {
             if (!response.data.success) {
                 let code = response.data.code;
@@ -67,7 +72,7 @@ export const callApi = async (apiObject) => {
                         result = await {success: false, status: 0, message: error.response.data.message};
                         return;
                     }
-                    // result = await renewTokenHandler(apiObject);
+                    result = await renewTokenHandler(apiObject);
 
                 } else if (error.response.status === 403) {
                     result = await {
@@ -114,42 +119,35 @@ export const callApi = async (apiObject) => {
 
 const renewTokenHandler = async (apiObject) => {
     let result;
-    // renew token - start
-    const obj = {
-        refresh_token: await AsyncStorage.getItem(StorageStrings.REFRESH_TOKEN),
-        grant_type: 'refresh_token',
-        user_type: 'ADMIN'
-    };
-    await authService.renewToken(qs.stringify(obj))
+    await authService.renewToken()
         .then(async response => {
-            if (response.access_token) {
+            if (response.token) {
                 await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
-                await AsyncStorage.setItem(StorageStrings.REFRESH_TOKEN, response.refresh_token);
                 result = await callApi(apiObject);
             } else {
-                result = await response;
-                Toast.show({
-                    type: 'error',
-                    position: 'top',
-                    text1: response.message,
-                    visibilityTime: 4000,
-                    autoHide: true,
-                    topOffset: 30,
-                    bottomOffset: 40,
-                    ref: ''
-                })
-                    .then((value) => {
-                        switch (value) {
-                            case "action":
-                                commonFunc.clearLocalStorage();
-                                //login navigation
-                                break;
-                            default:
-                                break;
-                        }
-                    });
+                await commonFunc.clearLocalStorage();
+                this.props.navigation.dispatch(
+                    CommonActions.reset({
+                        index: 1,
+                        routes: [
+                            {name: 'Login'},
+                        ],
+                    })
+                );
             }
-        });
+        })
+        .catch(error => {
+            commonFunc.clearLocalStorage();
+            this.props.navigation.dispatch(
+                CommonActions.reset({
+                    index: 1,
+                    routes: [
+                        {name: 'Login'},
+                    ],
+                })
+            );
+        })
+
     // renew token - end
     return result;
 };

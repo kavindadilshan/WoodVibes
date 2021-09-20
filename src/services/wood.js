@@ -9,6 +9,7 @@ export async function getAllWoodType(){
     apiObject.endpoint = `api/woodType/list`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }
 
@@ -21,6 +22,7 @@ export async function addWoodCost(body){
     apiObject.endpoint = `wood-cost/add`;
     apiObject.multipart = false;
     apiObject.body = body;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }
 
@@ -33,6 +35,7 @@ export async function getAllWoodCost(data){
     apiObject.endpoint = `api/wood-cost/list/${data}`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }
 
@@ -45,6 +48,7 @@ export async function getAllWoodCostById(data){
     apiObject.endpoint = `api/wood-cost/${data}`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }
 
@@ -57,5 +61,6 @@ export async function editCostById(data){
     apiObject.endpoint = `api/wood-cost/edit/${data.id}?cost=${data.cost}`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }

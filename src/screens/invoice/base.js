@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import {Button, Card} from 'react-native-elements';
+import {Image, Picker, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Button, Card, Input, Overlay} from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
 import TabHeader from '../../components/tabHeader';
@@ -11,6 +11,14 @@ import * as CustomerServices from "../../services/customer";
 import * as commonFunc from "../../utils/commonFunc";
 import AlertMessage from "../../components/AlertMessage";
 import Loading from "../../components/loading";
+import FilterButton from "../../components/filterButton";
+import gif from "../../resources/gif/loading.gif";
+
+const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
+    const paddingToBottom = 0;
+    return layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - paddingToBottom;
+};
 
 const InvoiceBase = ({navigation}) => {
 
@@ -18,24 +26,68 @@ const InvoiceBase = ({navigation}) => {
     const [showAlert, setShowAlert] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState();
+    const [page, setPage] = useState(0);
+    const [searchKey, setSearchKey] = useState('');
+    const [miniLoader, setMiniLoader] = useState(false);
+    const [searchOverlay, setSearchOverlay] = useState(false);
+    const [searchType, setSearchType] = useState('');
+    const [finished, setFinished] = useState(false);
 
-    useEffect( () => {
+    useEffect(() => {
         navigation.addListener('focus', async () => {
             setLoading(true);
-            await getAllInvoiceList();
+            await getAllInvoiceList(0, [], true);
         });
     }, [navigation])
 
-    async function getAllInvoiceList() {
-        const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
-        await InvoiceServices.getAllInvoice(factoryId)
+    async function getAllInvoiceList(pageNo, isEmpty, first) {
+        const data = {
+            factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID),
+            page: pageNo
+        }
+
+        let body;
+        if (searchType === 'name') {
+            body = {
+                name: searchKey
+            }
+        } else if (searchType === 'nic') {
+            body = {
+                nic: searchKey
+            }
+        } else {
+            body = {
+                invoiceNo: searchKey
+            }
+        }
+
+        await InvoiceServices.getAllInvoice(data, first === undefined ? body : null)
             .then(response => {
-                setInvoiceList(response);
+                let list;
+                if (isEmpty) {
+                    list = isEmpty
+                } else {
+                    list = invoiceList;
+                }
+
+                response.invoiceList.map(item=>{
+                    list.push({
+                        id:item.id,
+                        customerId:item.customerId,
+                        totalAmount:item.totalAmount,
+                        invoiceDate:item.invoiceDate
+                    })
+                })
+                if (pageNo + 1 >= response.pageCount) {
+                    setFinished(true);
+                }
+                setInvoiceList(list);
             })
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
+        setMiniLoader(false);
     }
 
     async function deleteInvoice(item) {
@@ -47,7 +99,7 @@ const InvoiceBase = ({navigation}) => {
                     .then(async response => {
                         commonFunc.notifyMessage('Invoice delete successfully', 1);
                         setInvoiceList([]);
-                        await getAllInvoiceList();
+                        await getAllInvoiceList(0,[]);
                     })
                     .catch(error => {
                         commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -61,10 +113,39 @@ const InvoiceBase = ({navigation}) => {
         }
     }
 
+    const toggleOverlay = () => {
+        setSearchOverlay(false);
+        setSearchKey('');
+        setSearchType('');
+    };
+
+    const searchItem = async () => {
+        setSearchOverlay(false);
+        setInvoiceList([])
+        setSearchKey('');
+        setSearchType('');
+        setPage(0);
+        setMiniLoader(true)
+        await getAllInvoiceList(0, []);
+    }
+
     return (
         <View style={styles.container}>
             <TabHeader title='Invoice'/>
-            <ScrollView contentContainerStyle={{paddingBottom: 10}}>
+            <ScrollView
+                contentContainerStyle={{paddingBottom: 10, justifyContent: 'center'}}
+                showsVerticalScrollIndicator={false}
+                onScroll={({nativeEvent}) => {
+                    if (isCloseToBottom(nativeEvent)) {
+                        if (!finished) {
+                            setPage(page + 1);
+                            getAllInvoiceList(page + 1);
+                        }
+                    }
+                }}
+
+            >
+                <FilterButton onPress={() => setSearchOverlay(true)}/>
                 {invoiceList && Object.keys(invoiceList).map((item, i) => (
                     invoiceList[item].id && (
                         <Card containerStyle={styles.listCard} key={i}>
@@ -122,6 +203,17 @@ const InvoiceBase = ({navigation}) => {
 
                 ))}
 
+                {
+                    miniLoader ?
+                        <View style={styles.gifHolder}>
+                            <Image source={gif} style={styles.gif}/>
+                        </View>
+                        : null
+                }
+
+                {!miniLoader && invoiceList.length === 0 && (
+                    <Text style={{textAlign: 'center', marginTop: '5%'}}>No Results found</Text>)}
+
             </ScrollView>
             <Loading isVisible={loading}/>
             <AlertMessage
@@ -132,6 +224,46 @@ const InvoiceBase = ({navigation}) => {
                 cancelText={'Yes'}
                 confirmText={'Not Now'}
             />
+            <Overlay
+                isVisible={searchOverlay}
+                overlayStyle={styles.overlay}
+                onBackdropPress={toggleOverlay}>
+                <Card containerStyle={styles.overlayCard}>
+                    <Card.Title style={{fontSize: 17}}>
+                        Filter | පෙරහන
+                    </Card.Title>
+                    <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <Picker
+                            style={{width: '30%', backgroundColor: 'yellow'}}
+                            mode='dropdown'
+                            dropdownIconColor={Constants.COLORS.BLACK}
+                            onValueChange={(itemValue, itemIndex) => {
+                                setSearchType(itemValue)
+                            }}>
+                            <Picker.Item label={'Select Type'} value={''}/>
+                            <Picker.Item label={'NIC'} value={'nic'}/>
+                            <Picker.Item label={'Name'} value={'name'}/>
+                            <Picker.Item label={'Invoice No'} value={'invoice'}/>
+                        </Picker>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder="Enter here..."
+                            value={searchKey}
+                            onChangeText={val => setSearchKey(val)}
+                        />
+                    </View>
+                    <Button
+                        title="Search | සොයන්න"
+                        onPress={searchItem}
+                        containerStyle={styles.buttonContainerStyle}
+                        buttonStyle={styles.buttonStyle}
+                        titleStyle={styles.buttonTitleStyle}
+                        disabled={searchType === ''}
+                    />
+                </Card>
+            </Overlay>
         </View>
     )
 };
@@ -174,6 +306,61 @@ const styles = StyleSheet.create({
     listCardItemDesc: {
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    overlay: {
+        borderRadius: 10,
+        backgroundColor: 'transparent',
+        shadowColor: 'transparent',
+        borderWidth: 0,
+        width: '100%'
+    },
+    overlayCard: {
+        borderRadius: 10,
+        backgroundColor: Constants.COLORS.BACKGROUND_BLUE,
+        borderWidth: 0,
+        marginBottom: 15,
+    },
+    cardItemConatiner: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    inputContainerStyle: {
+        backgroundColor: Constants.COLORS.WHITE,
+        width: '55%',
+        height: 45,
+        borderRadius: 10,
+    },
+    cardTotalConatiner: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection: 'row',
+        backgroundColor: Constants.COLORS.WHITE,
+        padding: 10,
+        borderRadius: 10,
+    },
+    buttonContainerStyle: {
+        marginTop: 20,
+        alignSelf: 'center',
+        width: '80%',
+        height: 50,
+    },
+    buttonStyle: {
+        height: 50,
+        backgroundColor: Constants.COLORS.PRIMARY_COLOR,
+        borderRadius: 10,
+    },
+    buttonTitleStyle: {
+        fontSize: 20,
+    },
+    gifHolder: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    gif: {
+        width: 75,
+        height: 75,
     },
 });
 

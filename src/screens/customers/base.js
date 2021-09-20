@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, Picker, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 import IconI from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Validation from '../../utils/validation';
-
+import Filter from '../../resources/images/filter.png';
 import * as Constants from '../../utils/constants';
 import TabHeader from '../../components/tabHeader';
 import * as customerService from '../../services/customer';
@@ -13,6 +13,17 @@ import {StorageStrings} from "../../utils/constants";
 import * as CustomerServices from "../../services/customer";
 import * as Constance from "../../utils/constants";
 import Loading from "../../components/loading";
+import FilterButton from "../../components/filterButton";
+import TextInput from "../../components/textInput";
+import Icon from "react-native-vector-icons/Ionicons";
+import gif from '../../resources/gif/loading.gif';
+
+
+const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
+    const paddingToBottom = 0;
+    return layoutMeasurement.height + contentOffset.y >=
+        contentSize.height - paddingToBottom;
+};
 
 const CustomerBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
@@ -21,41 +32,88 @@ const CustomerBase = ({navigation}) => {
     const [mobile, setMobile] = useState('');
     const [idType, setIdType] = useState('1');
     const [idNumber, setIdNumber] = useState('');
-    const [factoryId, setFactoryId] = useState('');
-    const [customerList,setCustomerList]=useState([]);
+    const [customerList, setCustomerList] = useState([]);
+    const [page, setPage] = useState(0);
+    const [searchKey, setSearchKey] = useState('');
+    const [miniLoader, setMiniLoader] = useState(false);
+    const [searchOverlay, setSearchOverlay] = useState(false);
+    const [searchType, setSearchType] = useState('');
+    const [finished, setFinished] = useState(false);
 
     useEffect(async () => {
-        setLoading(true)
-        await getAllCustomersList();
-    }, [])
+        navigation.addListener('focus', async () => {
+            setLoading(true);
+            setPage(0);
+            setFinished(false);
+            setCustomerList([])
+            await getAllCustomersList(0, [], true);
+        });
+    }, [navigation])
 
-    async function getAllCustomersList() {
-        const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
-        await CustomerServices.getAllCustomers(factoryId)
+    async function getAllCustomersList(pageNo, isEmpty, first) {
+        const data = {
+            factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID),
+            page: pageNo
+        }
+        let body;
+        if (searchType === 'name') {
+            body = {
+                name: searchKey
+            }
+        } else {
+            body = {
+                nic: searchKey
+            }
+        }
+
+        await CustomerServices.getAllCustomers(data, first === undefined ? body : null)
             .then(response => {
-                setCustomerList(response.customers);
+                let list;
+                if (isEmpty) {
+                    list = isEmpty
+                } else {
+                    list = customerList;
+                }
+
+                response.customers.map(item => {
+                    list.push({
+                        name: item.name,
+                        mobile: item.mobile,
+                        identityNo: item.identityNo,
+                        orderCount: item.orderCount,
+                        lastOrderDate: item.lastOrderDate
+                    })
+                })
+                setCustomerList(list);
+                if (pageNo + 1 >= response.pageCount) {
+                    setFinished(true);
+                }
             })
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
+        setMiniLoader(false)
     }
 
     const toggleOverlay = () => {
         setName('');
         setIdNumber('');
         setMobile('');
-        setVisible(!visible);
+        setVisible(false);
+        setSearchOverlay(false);
+        setSearchKey('');
+        setSearchType('');
     };
 
     const addOnPress = async () => {
-        if (!Validation.textFieldValidator(name.trim(),1)){
+        if (!Validation.textFieldValidator(name.trim(), 1)) {
             commonFunc.notifyMessage('Please Enter Name', 2);
-        }else if (!Validation.nicValidator(idNumber.trim())){
+        } else if (!Validation.nicValidator(idNumber.trim())) {
             commonFunc.notifyMessage('Please Enter Correct NIC', 2);
-        }else if (!Validation.mobileNumberValidator(mobile.trim())){
+        } else if (!Validation.mobileNumberValidator(mobile.trim())) {
             commonFunc.notifyMessage('Please Enter Correct Mobile Number', 2);
-        }else {
+        } else {
             setVisible(true);
             await customerAddHandler();
         }
@@ -74,7 +132,7 @@ const CustomerBase = ({navigation}) => {
         await customerService.addCustomer(data)
             .then(async res => {
                 setVisible(false);
-                await getAllCustomersList();
+                await getAllCustomersList(0, []);
                 commonFunc.notifyMessage("Customer has been successfully created!", 1);
             })
             .catch(error => {
@@ -93,26 +151,68 @@ const CustomerBase = ({navigation}) => {
         />
     );
 
+    const searchItem = async () => {
+        setSearchOverlay(false);
+        setCustomerList([]);
+        setSearchKey('');
+        setSearchType('');
+        setPage(0);
+        setMiniLoader(true)
+        await getAllCustomersList(0, []);
+    }
+
     return (
         <View style={styles.container}>
             <TabHeader title="Customers" rightComponent={headerRightBtn}/>
-            <ScrollView contentContainerStyle={{paddingBottom:10}}>
-                {customerList.map((items,i)=>(
+            <ScrollView
+                contentContainerStyle={{paddingBottom: 10, justifyContent: 'center'}}
+                showsVerticalScrollIndicator={false}
+                onScroll={({nativeEvent}) => {
+                    if (isCloseToBottom(nativeEvent)) {
+                        if (!finished) {
+                            setPage(page + 1);
+                            getAllCustomersList(page + 1);
+                        }
+                    }
+                }}
+
+            >
+
+                <FilterButton onPress={() => setSearchOverlay(true)}/>
+
+
+                {customerList.map((items, i) => (
                     <Card containerStyle={styles.listCard} key={i}>
                         <Card.Title style={styles.listCardTitle}>
                             {items.name}
                         </Card.Title>
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
-                            <View style={{flexDirection:'column'}}>
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.listCardItemHeader}>Mobile Number </Text>
+                                <Text style={{fontSize: 10}}> දුරකතන අංකය </Text>
+                            </View>
+
+                            <Text style={styles.listCardItemDesc}>{items.mobile}</Text>
+                        </View>
+                        <View style={styles.listCardItem}>
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.listCardItemHeader}>Identity Number </Text>
+                                <Text style={{fontSize: 10}}> හැදුනුම්පත් අංකය </Text>
+                            </View>
+
+                            <Text style={styles.listCardItemDesc}>{items.identityNo}</Text>
+                        </View>
+                        <View style={styles.listCardItem}>
+                            <View style={{flexDirection: 'column'}}>
                                 <Text style={styles.listCardItemHeader}>Total Orders </Text>
                                 <Text style={{fontSize: 10}}> මුළු ඇණවුම් </Text>
                             </View>
 
-                            <Text style={styles.listCardItemDesc}>4</Text>
+                            <Text style={styles.listCardItemDesc}>{items.orderCount}</Text>
                         </View>
                         <View style={styles.listCardItem}>
-                            <View style={{flexDirection:'column'}}>
+                            <View style={{flexDirection: 'column'}}>
                                 <Text style={styles.listCardItemHeader}>Last Order </Text>
                                 <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
                             </View>
@@ -120,6 +220,16 @@ const CustomerBase = ({navigation}) => {
                         </View>
                     </Card>
                 ))}
+                {
+                    miniLoader ?
+                        <View style={styles.gifHolder}>
+                            <Image source={gif} style={styles.gif}/>
+                        </View>
+                        : null
+                }
+
+                {!miniLoader && customerList.length === 0 && (
+                    <Text style={{textAlign: 'center', marginTop: '5%'}}>No Results found</Text>)}
             </ScrollView>
 
 
@@ -181,6 +291,46 @@ const CustomerBase = ({navigation}) => {
                     />
                 </Card>
             </Overlay>
+
+            <Overlay
+                isVisible={searchOverlay}
+                overlayStyle={styles.overlay}
+                onBackdropPress={toggleOverlay}>
+                <Card containerStyle={styles.overlayCard}>
+                    <Card.Title style={{fontSize: 17}}>
+                        Filter | පෙරහන
+                    </Card.Title>
+                    <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <Picker
+                            style={{width: '30%', backgroundColor: 'yellow'}}
+                            mode='dropdown'
+                            dropdownIconColor={Constants.COLORS.BLACK}
+                            onValueChange={(itemValue, itemIndex) => {
+                                setSearchType(itemValue)
+                            }}>
+                            <Picker.Item label={'Select Type'} value={''}/>
+                            <Picker.Item label={'NIC'} value={'nic'}/>
+                            <Picker.Item label={'Name'} value={'name'}/>
+                        </Picker>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder="Enter here..."
+                            value={searchKey}
+                            onChangeText={val => setSearchKey(val)}
+                        />
+                    </View>
+                    <Button
+                        title="Search | සොයන්න"
+                        onPress={searchItem}
+                        containerStyle={styles.buttonContainerStyle}
+                        buttonStyle={styles.buttonStyle}
+                        titleStyle={styles.buttonTitleStyle}
+                        disabled={searchType === ''}
+                    />
+                </Card>
+            </Overlay>
             <Loading isVisible={loading}/>
         </View>
     );
@@ -223,7 +373,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 5,
-        alignItems:'center'
+        alignItems: 'center'
     },
     listCardItemHeader: {
         fontSize: 16,
@@ -235,9 +385,9 @@ const styles = StyleSheet.create({
     overlay: {
         borderRadius: 10,
         backgroundColor: 'transparent',
-        shadowColor:'transparent',
-        borderWidth:0,
-        width:'100%'
+        shadowColor: 'transparent',
+        borderWidth: 0,
+        width: '100%'
     },
     overlayCard: {
         borderRadius: 10,
@@ -277,6 +427,15 @@ const styles = StyleSheet.create({
     },
     buttonTitleStyle: {
         fontSize: 20,
+    },
+    gifHolder: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    gif: {
+        width: 75,
+        height: 75,
     },
 });
 

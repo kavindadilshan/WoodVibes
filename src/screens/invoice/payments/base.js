@@ -1,6 +1,6 @@
 import React, {Component, useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, Text, View} from "react-native";
-import {Card, Divider, Input} from "react-native-elements";
+import {Button, Card, Divider, Input} from "react-native-elements";
 import * as Constants from "../../../utils/constants";
 import IconI from "react-native-vector-icons/Ionicons";
 import * as Constance from "../../../utils/constants";
@@ -18,6 +18,7 @@ const PayList = ({navigation, route}) => {
     const [showAlert, setShowAlert] = useState(false);
     const [selectedPayId, setSelectedPayId] = useState();
     const [invoiceId,setInvoiceId]=useState();
+    const [payAmount,setPayAmount]=useState();
 
     useEffect(async () => {
         setLoading(true);
@@ -63,6 +64,22 @@ const PayList = ({navigation, route}) => {
         }
     }
 
+    const payInvoiceHandler=async ()=>{
+        const data={
+            payAmount:payAmount
+        }
+        setLoading(true)
+        await InvoiceServices.invoicePay(invoiceId,data)
+            .then(async response => {
+                commonFunc.notifyMessage('Payment record added successfully', 1);
+                await getPayList(invoiceId);
+            })
+            .catch(error => {
+                commonFunc.notifyMessage('You connection was interrupted', 0);
+            })
+        setLoading(false)
+    }
+
     return (
         <View style={styles.container}>
             <TabHeader title='Pay List' backButton={true} navigation={navigation}/>
@@ -98,6 +115,31 @@ const PayList = ({navigation, route}) => {
                             disabled={true}
                         />
                     </View>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Pay Amount</Text>
+                            <Text style={{fontFamily: 'Amalee', marginBottom: 8}}>ගෙවන මුදල</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder='Pay Amount'
+                            textAlign={'right'}
+                            keyboardType='decimal-pad'
+                            value={payAmount}
+                            onChangeText={val => setPayAmount(val)}
+                        />
+                    </View>
+
+                    <Button
+                        title="Save | සුරකින්න"
+                        containerStyle={styles.buttonContainerStyle}
+                        buttonStyle={styles.buttonStyle}
+                        titleStyle={styles.buttonTitleStyle}
+                        disabled={payAmount === undefined || payAmount === ''}
+                        onPress={() => payInvoiceHandler()}
+                    />
+
                     <Card containerStyle={styles.listCard}>
                         <View>
                             <View style={styles.listItemHeader}>
@@ -246,6 +288,20 @@ const styles = StyleSheet.create({
     },
     addNewButtonTitleStyle: {
         fontSize: 16,
+    },
+    buttonContainerStyle: {
+        marginVertical: 20,
+        alignSelf: 'center',
+        width: '80%',
+        height: 50,
+    },
+    buttonStyle: {
+        height: 50,
+        backgroundColor: Constants.COLORS.PRIMARY_COLOR,
+        borderRadius: 10,
+    },
+    buttonTitleStyle: {
+        fontSize: 20,
     },
 })
 

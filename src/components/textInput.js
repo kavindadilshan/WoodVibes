@@ -6,7 +6,7 @@ import {StyleSheet, View} from "react-native";
 
 const TextInput = (props) => {
     return (
-        <View style={styles.inputContainerStyle}>
+        <View style={props.width!==undefined? {...styles.inputContainerStyle,width:props.width}:styles.inputContainerStyle}>
             <Input
                 containerStyle={{width: '100%'}}
                 inputContainerStyle={{borderBottomWidth: 0}}
@@ -24,6 +24,7 @@ const TextInput = (props) => {
                 editable={props.editable}
                 style={styles.input}
                 leftIcon={props.leftIcon}
+                rightIcon={props.rightIcon}
             />
         </View>
     )

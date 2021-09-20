@@ -12,15 +12,15 @@ export async function saveInvoice(body){
     return await ApiService.callApi(apiObject);
 }
 
-export async function getAllInvoice(id){
+export async function getAllInvoice(data,body){
     const apiObject = {};
-    apiObject.method = 'GET';
+    apiObject.method = 'POST';
     apiObject.authentication = true;
     apiObject.isBasicAuth = false;
     apiObject.urlencoded = false;
-    apiObject.endpoint = `api/invoice/${id}`;
+    apiObject.endpoint = `api/invoice/${data.factoryId}?size=10&page=${data.page}`;
     apiObject.multipart = false;
-    apiObject.body = null;
+    apiObject.body = body;
     return await ApiService.callApi(apiObject);
 }
 
@@ -45,6 +45,7 @@ export async function getInvoiceById(id){
     apiObject.endpoint = `api/invoice/${id}/details`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }
 
@@ -57,6 +58,7 @@ export async function getInvoicePaymentDetails(id){
     apiObject.endpoint = `api/invoice/${id}/payments`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
     return await ApiService.callApi(apiObject);
 }
 
@@ -69,5 +71,18 @@ export async function deletePayRecord(id){
     apiObject.endpoint = `api/invoice/payment/${id}/delete`;
     apiObject.multipart = false;
     apiObject.body = null;
+    apiObject.isRefreshToken=false;
+    return await ApiService.callApi(apiObject);
+}
+
+export async function invoicePay(id,body){
+    const apiObject = {};
+    apiObject.method = 'POST';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/${id}/pay`;
+    apiObject.multipart = false;
+    apiObject.body = body;
     return await ApiService.callApi(apiObject);
 }

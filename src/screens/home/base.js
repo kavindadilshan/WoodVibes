@@ -74,7 +74,7 @@ const HomeBase = ({navigation}) => {
 
     async function getAllCustomersList() {
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
-        await CustomerServices.getAllCustomers(factoryId)
+        await CustomerServices.getCustomerList(factoryId)
             .then(response => {
                 setCustomerList(response.customers);
             })
@@ -121,7 +121,19 @@ const HomeBase = ({navigation}) => {
         }
         setLoading(true)
         await InvoiceServices.saveInvoice(data)
-            .then(commonFunc.notifyMessage('Invoice saved successfully!', 1))
+            .then(
+                commonFunc.notifyMessage('Invoice saved successfully!', 1),
+                setGroupList([]),
+                setTotalAmount(null),
+                setDiscount(''),
+                setNetAmount(null),
+                setPayAmount(''),
+                setLength(''),
+                setCircumference(''),
+                setAddingList([]),
+                setSelectedCustomerList([]),
+                setSelectedWoodTypeList([])
+            )
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
@@ -749,7 +761,7 @@ const styles = StyleSheet.create({
     },
     orderCard: {
         borderRadius: 10,
-        backgroundColor: Constants.COLORS.BACKGROUND_BLUE,
+        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
         borderWidth: 0,
     },
     cardItemConatiner: {
