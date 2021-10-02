@@ -20,10 +20,12 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [customerName,setCustomerName]=useState('');
     const [totalAmount,setTotalAmount]=useState('');
     const [invoiceId,setInvoiceId]=useState();
+    const [invoiceIdentityNum,setInvoiceIdentityNum]=useState();
 
     useEffect(async () => {
         setLoading(true);
-        setInvoiceId(route.params.invoiceId)
+        setInvoiceId(route.params.invoiceId);
+        setInvoiceIdentityNum(route.params.invoiceNo.toString())
         await getInvoiceById(route.params.invoiceId)
     }, [])
 
@@ -108,6 +110,19 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                     {/*        */}
                     {/*    </View>*/}
                     {/*))}*/}
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Invoice Number</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>ඉන්වොයිසි අංකය</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            textAlign={'right'}
+                            value={invoiceIdentityNum}
+                            disabled={true}
+                        />
+                    </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
                             <Text>Customer Name</Text>

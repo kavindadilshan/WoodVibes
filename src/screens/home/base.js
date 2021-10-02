@@ -513,6 +513,7 @@ const HomeBase = ({navigation}) => {
                                         keyboardType='decimal-pad'
                                         onChangeText={val => onChangeText(val)}
                                         disabled={!editable}
+                                        maxLength = {2}
                                     />
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -857,7 +858,7 @@ const styles = StyleSheet.create({
     },
     overlayCard: {
         borderRadius: 10,
-        backgroundColor: Constants.COLORS.BACKGROUND_BLUE,
+        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
         borderWidth: 0,
         marginBottom: 15,
     },

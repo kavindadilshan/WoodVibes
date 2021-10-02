@@ -11,7 +11,7 @@ class Base extends Component {
                 <ScrollView contentContainerStyle={{flexGrow: 1,paddingBottom:10}}>
                     <View style={styles.container}>
                         <Image
-                            source={require('../../resources/images/logo.jpg')}
+                            source={require('../../resources/images/logo.png')}
                             style={styles.logo}
                             PlaceholderContent={<ActivityIndicator/>}/>
                         <Text style={styles.title}>Welcome to {Constants.APP_NAME}</Text>

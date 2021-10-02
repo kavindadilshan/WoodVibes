@@ -1,5 +1,5 @@
 const PROD_URL_REMOTE = ``;
-const DEV_URL_REMOTE = `https://fedc-112-134-154-114.ngrok.io`;
+const DEV_URL_REMOTE = `http://d662-61-245-171-81.ngrok.io`;
 
 export const asDev = true;
 

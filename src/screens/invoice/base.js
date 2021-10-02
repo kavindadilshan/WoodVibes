@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Image, Picker, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, View,Appearance} from 'react-native';
 import {Button, Card, Input, Overlay} from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
@@ -13,6 +13,10 @@ import AlertMessage from "../../components/AlertMessage";
 import Loading from "../../components/loading";
 import FilterButton from "../../components/filterButton";
 import gif from "../../resources/gif/loading.gif";
+
+import {Picker} from "@react-native-picker/picker";
+
+let asDarkMode= Appearance.getColorScheme()==='dark'
 
 const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 0;
@@ -70,12 +74,13 @@ const InvoiceBase = ({navigation}) => {
                     list = invoiceList;
                 }
 
-                response.invoiceList.map(item=>{
+                response.invoiceList.map(item => {
                     list.push({
-                        id:item.id,
-                        customerId:item.customerId,
-                        totalAmount:item.totalAmount,
-                        invoiceDate:item.invoiceDate
+                        id: item.id,
+                        customerId: item.customerId,
+                        totalAmount: item.totalAmount,
+                        invoiceDate: item.invoiceDate,
+                        invoiceNo: item.invoiceNo
                     })
                 })
                 if (pageNo + 1 >= response.pageCount) {
@@ -99,7 +104,7 @@ const InvoiceBase = ({navigation}) => {
                     .then(async response => {
                         commonFunc.notifyMessage('Invoice delete successfully', 1);
                         setInvoiceList([]);
-                        await getAllInvoiceList(0,[]);
+                        await getAllInvoiceList(0, []);
                     })
                     .catch(error => {
                         commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -122,8 +127,8 @@ const InvoiceBase = ({navigation}) => {
     const searchItem = async () => {
         setSearchOverlay(false);
         setInvoiceList([])
-        setSearchKey('');
-        setSearchType('');
+        // setSearchKey('');
+        // setSearchType('');
         setPage(0);
         setMiniLoader(true)
         await getAllInvoiceList(0, []);
@@ -133,11 +138,12 @@ const InvoiceBase = ({navigation}) => {
         <View style={styles.container}>
             <TabHeader title='Invoice'/>
             <ScrollView
-                contentContainerStyle={{paddingBottom: 10, justifyContent: 'center'}}
+                // contentContainerStyle={{paddingBottom: 10, justifyContent: 'center'}}
                 showsVerticalScrollIndicator={false}
                 onScroll={({nativeEvent}) => {
                     if (isCloseToBottom(nativeEvent)) {
                         if (!finished) {
+                            setMiniLoader(true)
                             setPage(page + 1);
                             getAllInvoiceList(page + 1);
                         }
@@ -156,7 +162,7 @@ const InvoiceBase = ({navigation}) => {
                                 marginBottom: 5
                             }}>
                                 <Card.Title style={styles.listCardTitle}>
-                                    Invoice
+                                    {invoiceList[item].invoiceNo}
                                 </Card.Title>
                                 <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
                                     <Button
@@ -171,7 +177,10 @@ const InvoiceBase = ({navigation}) => {
                                     />
                                     <Button
                                         title="View"
-                                        onPress={() => navigation.navigate('InvoiceDetails', {invoiceId: invoiceList[item].id})}
+                                        onPress={() => navigation.navigate('InvoiceDetails', {
+                                            invoiceId: invoiceList[item].id,
+                                            invoiceNo: invoiceList[item].invoiceNo
+                                        })}
                                         containerStyle={styles.addNewButtonContainerStyle}
                                         buttonStyle={{
                                             ...styles.addNewButtonStyle,
@@ -187,7 +196,7 @@ const InvoiceBase = ({navigation}) => {
                             <View style={styles.listCardItem}>
                                 <View style={{flexDirection: 'column'}}>
                                     <Text style={styles.listCardItemHeader}>Total Amount</Text>
-                                    <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
+                                    <Text style={{fontSize: 10}}> මුළු මුදල </Text>
                                 </View>
                                 <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
                             </View>
@@ -235,23 +244,41 @@ const InvoiceBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '30%', backgroundColor: 'yellow'}}
+                            style={{width: '45%',backgroundColor:Constants.COLORS.BLACK}}
                             mode='dropdown'
+                            selectedValue={searchType}
                             dropdownIconColor={Constants.COLORS.BLACK}
                             onValueChange={(itemValue, itemIndex) => {
-                                setSearchType(itemValue)
+                                setSearchType(itemValue);
+                                if (itemValue === 'invoice') {
+                                    setSearchKey('IN-')
+                                } else {
+                                    setSearchKey('')
+                                }
                             }}>
-                            <Picker.Item label={'Select Type'} value={''}/>
-                            <Picker.Item label={'NIC'} value={'nic'}/>
-                            <Picker.Item label={'Name'} value={'name'}/>
-                            <Picker.Item label={'Invoice No'} value={'invoice'}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'Select Type'} value={''}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'NIC'} value={'nic'}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'Name'} value={'name'}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'Invoice No'} value={'invoice'}/>
                         </Picker>
                         <Input
                             containerStyle={styles.inputContainerStyle}
                             inputContainerStyle={{borderBottomWidth: 0}}
                             placeholder="Enter here..."
                             value={searchKey}
-                            onChangeText={val => setSearchKey(val)}
+                            onChangeText={val => {
+                                if (searchType !== 'invoice') {
+                                    setSearchKey(val)
+                                } else {
+                                    if (/^\d+$/.test(val.toString().slice(3))){
+                                        if (val.length<=2){
+                                            val = searchKey.replace(/^IN-+/, 'IN-');
+                                        }
+                                        setSearchKey(val)
+                                    }
+                                }
+                            }}
+                            keyboardType={searchType==='invoice'?'number-pad':'default'}
                         />
                     </View>
                     <Button

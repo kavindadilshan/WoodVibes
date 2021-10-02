@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Image, Picker, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,Appearance} from 'react-native';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 import IconI from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,7 +17,9 @@ import FilterButton from "../../components/filterButton";
 import TextInput from "../../components/textInput";
 import Icon from "react-native-vector-icons/Ionicons";
 import gif from '../../resources/gif/loading.gif';
+import {Picker} from "@react-native-picker/picker";
 
+let asDarkMode= Appearance.getColorScheme()==='dark'
 
 const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 0;
@@ -45,7 +47,7 @@ const CustomerBase = ({navigation}) => {
             setLoading(true);
             setPage(0);
             setFinished(false);
-            setCustomerList([])
+            // setCustomerList([])
             await getAllCustomersList(0, [], true);
         });
     }, [navigation])
@@ -131,20 +133,31 @@ const CustomerBase = ({navigation}) => {
         setLoading(true);
         await customerService.addCustomer(data)
             .then(async res => {
+                console.log(res)
                 setVisible(false);
-                await getAllCustomersList(0, []);
-                commonFunc.notifyMessage("Customer has been successfully created!", 1);
+                if (res.success === undefined) {
+                    await getAllCustomersList(0, []);
+                    commonFunc.notifyMessage("Customer has been successfully created!", 1);
+                } else {
+                    setLoading(false);
+                    commonFunc.notifyMessage("duplicate entry", 0);
+                }
             })
             .catch(error => {
-                commonFunc.notifyMessage('You connection was interrupted', 0);
                 setLoading(false);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
             })
     }
 
     const headerRightBtn = (
         <Button
             title="Add New"
-            onPress={toggleOverlay}
+            onPress={() => {
+                setVisible(true);
+                setName('');
+                setIdNumber('');
+                setMobile('');
+            }}
             containerStyle={styles.addNewButtonContainerStyle}
             buttonStyle={styles.addNewButtonStyle}
             titleStyle={styles.addNewButtonTitleStyle}
@@ -154,8 +167,8 @@ const CustomerBase = ({navigation}) => {
     const searchItem = async () => {
         setSearchOverlay(false);
         setCustomerList([]);
-        setSearchKey('');
-        setSearchType('');
+        // setSearchKey('');
+        // setSearchType('');
         setPage(0);
         setMiniLoader(true)
         await getAllCustomersList(0, []);
@@ -165,11 +178,12 @@ const CustomerBase = ({navigation}) => {
         <View style={styles.container}>
             <TabHeader title="Customers" rightComponent={headerRightBtn}/>
             <ScrollView
-                contentContainerStyle={{paddingBottom: 10, justifyContent: 'center'}}
+                // contentContainerStyle={{paddingBottom: 10}}
                 showsVerticalScrollIndicator={false}
                 onScroll={({nativeEvent}) => {
                     if (isCloseToBottom(nativeEvent)) {
                         if (!finished) {
+                            setMiniLoader(!miniLoader)
                             setPage(page + 1);
                             getAllCustomersList(page + 1);
                         }
@@ -292,6 +306,7 @@ const CustomerBase = ({navigation}) => {
                 </Card>
             </Overlay>
 
+
             <Overlay
                 isVisible={searchOverlay}
                 overlayStyle={styles.overlay}
@@ -303,15 +318,17 @@ const CustomerBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '30%', backgroundColor: 'yellow'}}
+                            style={{width: '45%',color:Constants.COLORS.BLACK}}
+                            color={'red'}
                             mode='dropdown'
+                            selectedValue={searchType}
                             dropdownIconColor={Constants.COLORS.BLACK}
                             onValueChange={(itemValue, itemIndex) => {
                                 setSearchType(itemValue)
                             }}>
-                            <Picker.Item label={'Select Type'} value={''}/>
-                            <Picker.Item label={'NIC'} value={'nic'}/>
-                            <Picker.Item label={'Name'} value={'name'}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'Select Type'} value={''}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'NIC'} value={'nic'}/>
+                            <Picker.Item color={asDarkMode?'white':'black'} label={'Name'} value={'name'}/>
                         </Picker>
                         <Input
                             containerStyle={styles.inputContainerStyle}
@@ -391,7 +408,7 @@ const styles = StyleSheet.create({
     },
     overlayCard: {
         borderRadius: 10,
-        backgroundColor: Constants.COLORS.BACKGROUND_BLUE,
+        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
         borderWidth: 0,
         marginBottom: 15,
     },

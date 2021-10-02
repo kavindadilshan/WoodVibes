@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {Image, View,StyleSheet} from "react-native";
 import { CommonActions } from '@react-navigation/native';
 import * as Constants from "../../utils/constants";
-import AppIcon from '../../resources/images/logo.jpg'
+import AppIcon from '../../resources/images/lineLogo.png'
 
 class Base extends Component {
 

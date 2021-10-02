@@ -59,6 +59,7 @@ const LoginBase = ({navigation}) => {
                     await AsyncStorage.setItem(StorageStrings.LOGGED, 'true');
                     await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
                     await AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
+                    await AsyncStorage.setItem(StorageStrings.ROLE,response.role);
                     navigation.dispatch(
                         CommonActions.reset({
                             index: 1,
@@ -81,10 +82,18 @@ const LoginBase = ({navigation}) => {
         <View>
             <ScrollView contentContainerStyle={{flexGrow: 1}}>
                 <View style={styles.container}>
-                    <Image
-                        source={require('../../resources/images/logo.jpg')}
-                        style={styles.logo}
-                        PlaceholderContent={<ActivityIndicator/>}/>
+                    <View style={styles.logo}>
+                        <View style={{width:  Dimensions.get('window').width/100*60,height:Dimensions.get('window').width/100*60,marginLeft:'5%'}}>
+                            <Image
+                                source={require('../../resources/images/logo.png')}
+                                style={{width:'100%',height:'100%'}}
+                                PlaceholderContent={<ActivityIndicator/>}
+                                resizeMode={'contain'}
+                            />
+                        </View>
+
+                    </View>
+
                     <Text style={styles.title}>Welcome to {Constants.APP_NAME}</Text>
                     <TextInput
                         placeholder={"Username"}
@@ -184,7 +193,8 @@ const styles = StyleSheet.create({
     logo: {
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').width,
-        alignSelf: 'center'
+        justifyContent: 'center',
+        alignItems:'center'
     },
     title: {
         marginTop: 20,

@@ -71,13 +71,14 @@ const PayList = ({navigation, route}) => {
         setLoading(true)
         await InvoiceServices.invoicePay(invoiceId,data)
             .then(async response => {
+                setLoading(false)
                 commonFunc.notifyMessage('Payment record added successfully', 1);
                 await getPayList(invoiceId);
             })
             .catch(error => {
+                setLoading(false)
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
-        setLoading(false)
     }
 
     return (
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
     },
     orderCard: {
         borderRadius: 10,
-        backgroundColor: Constants.COLORS.BACKGROUND_PURPLE,
+        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
         borderWidth: 0,
     },
     cardItemConatiner: {

@@ -1,7 +1,7 @@
 import React from 'react';
 import {Dimensions, ScrollView, StyleSheet, Text, View} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
-import ProfileImg from '../../resources/images/logo.jpg';
+import ProfileImg from '../../resources/images/logo2.png';
 import Img1 from '../../resources/images/location.png';
 import Img2 from '../../resources/images/policy.png';
 import Img3 from '../../resources/images/smartphone.png';
