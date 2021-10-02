@@ -86,3 +86,15 @@ export async function invoicePay(id,body){
     apiObject.body = body;
     return await ApiService.callApi(apiObject);
 }
+
+export async function getAllPendingInvoice(data,body){
+    const apiObject = {};
+    apiObject.method = 'POST';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/pending/${data.factoryId}?size=10&page=${data.page}`;
+    apiObject.multipart = false;
+    apiObject.body = body;
+    return await ApiService.callApi(apiObject);
+}

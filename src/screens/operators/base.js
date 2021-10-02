@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,Appearance} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Appearance} from 'react-native';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 import IconI from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -7,10 +7,9 @@ import * as Validation from '../../utils/validation';
 import Filter from '../../resources/images/filter.png';
 import * as Constants from '../../utils/constants';
 import TabHeader from '../../components/tabHeader';
-import * as customerService from '../../services/customer';
+import * as OperatorsService from '../../services/operators';
 import * as commonFunc from "../../utils/commonFunc";
 import {StorageStrings} from "../../utils/constants";
-import * as CustomerServices from "../../services/customer";
 import * as Constance from "../../utils/constants";
 import Loading from "../../components/loading";
 import FilterButton from "../../components/filterButton";
@@ -19,7 +18,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import gif from '../../resources/gif/loading.gif';
 import {Picker} from "@react-native-picker/picker";
 
-let asDarkMode= Appearance.getColorScheme()==='dark'
+let asDarkMode = Appearance.getColorScheme() === 'dark'
 
 const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 0;
@@ -27,10 +26,13 @@ const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
         contentSize.height - paddingToBottom;
 };
 
-const CustomerBase = ({navigation}) => {
+const OperatorBase = ({navigation}) => {
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [mobile, setMobile] = useState('');
     const [idType, setIdType] = useState('1');
     const [idNumber, setIdNumber] = useState('');
@@ -48,11 +50,11 @@ const CustomerBase = ({navigation}) => {
             setPage(0);
             setFinished(false);
             setCustomerList([])
-            await getAllCustomersList(0, [], true);
+            await getAllOperatorList(0, [], true);
         });
     }, [navigation])
 
-    async function getAllCustomersList(pageNo, isEmpty, first) {
+    async function getAllOperatorList(pageNo, isEmpty, first) {
         const data = {
             factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID),
             page: pageNo
@@ -68,7 +70,7 @@ const CustomerBase = ({navigation}) => {
             }
         }
 
-        await CustomerServices.getAllCustomers(data, first === undefined ? body : null)
+        await OperatorsService.getAllOperators(data, first === undefined ? body : null)
             .then(response => {
                 let list;
                 if (isEmpty) {
@@ -77,13 +79,13 @@ const CustomerBase = ({navigation}) => {
                     list = customerList;
                 }
 
-                response.customers.map(item => {
+                response.users !== null && response.users.map(item => {
                     list.push({
                         name: item.name,
+                        username:item.username,
+                        email:item.email,
                         mobile: item.mobile,
                         identityNo: item.identityNo,
-                        orderCount: item.orderCount,
-                        lastOrderDate: item.lastOrderDate
                     })
                 })
                 setCustomerList(list);
@@ -111,33 +113,42 @@ const CustomerBase = ({navigation}) => {
     const addOnPress = async () => {
         if (!Validation.textFieldValidator(name.trim(), 1)) {
             commonFunc.notifyMessage('Please Enter Name', 2);
+        } else if (!Validation.textFieldValidator(username.trim(), 1)) {
+            commonFunc.notifyMessage('Please Enter Username', 2);
+        } else if (!Validation.emailValidator(email.trim())) {
+            commonFunc.notifyMessage('Please Enter Valid Email', 2);
+        } else if (!Validation.textFieldValidator(password.trim(), 1)) {
+            commonFunc.notifyMessage('Please Enter Password', 2);
         } else if (!Validation.nicValidator(idNumber.trim())) {
             commonFunc.notifyMessage('Please Enter Correct NIC', 2);
         } else if (!Validation.mobileNumberValidator(mobile.trim())) {
             commonFunc.notifyMessage('Please Enter Correct Mobile Number', 2);
         } else {
             setVisible(true);
-            await customerAddHandler();
+            await operatorAddHandler();
         }
 
     };
 
-    const customerAddHandler = async () => {
+    const operatorAddHandler = async () => {
         const data = {
             name: name,
+            username: username,
+            email: email,
+            password: password,
             mobile: mobile,
-            idType: idType,
+            identityType: idType,
             identityNo: idNumber,
             factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID)
         }
         setLoading(true);
-        await customerService.addCustomer(data)
+        await OperatorsService.addOperator(data)
             .then(async res => {
                 console.log(res)
                 setVisible(false);
                 if (res.success === undefined) {
-                    await getAllCustomersList(0, []);
-                    commonFunc.notifyMessage("Customer has been successfully created!", 1);
+                    await getAllOperatorList(0, []);
+                    commonFunc.notifyMessage("Operator has been successfully created!", 1);
                 } else {
                     setLoading(false);
                     commonFunc.notifyMessage("duplicate entry", 0);
@@ -171,12 +182,12 @@ const CustomerBase = ({navigation}) => {
         // setSearchType('');
         setPage(0);
         setMiniLoader(true)
-        await getAllCustomersList(0, []);
+        await getAllOperatorList(0, []);
     }
 
     return (
         <View style={styles.container}>
-            <TabHeader title="Customers" rightComponent={headerRightBtn}/>
+            <TabHeader title="Operators" rightComponent={headerRightBtn}/>
             <ScrollView
                 // contentContainerStyle={{paddingBottom: 10}}
                 showsVerticalScrollIndicator={false}
@@ -203,6 +214,22 @@ const CustomerBase = ({navigation}) => {
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
                             <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.listCardItemHeader}>Username </Text>
+                                <Text style={{fontSize: 10}}> පරිශීලක නාමය </Text>
+                            </View>
+
+                            <Text style={styles.listCardItemDesc}>{items.username}</Text>
+                        </View>
+                        <View style={styles.listCardItem}>
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.listCardItemHeader}>Email </Text>
+                                <Text style={{fontSize: 10}}> විද්යුත් තැපෑල </Text>
+                            </View>
+
+                            <Text style={{...styles.listCardItemDesc,fontSize:14}}>{items.email}</Text>
+                        </View>
+                        <View style={styles.listCardItem}>
+                            <View style={{flexDirection: 'column'}}>
                                 <Text style={styles.listCardItemHeader}>Mobile Number </Text>
                                 <Text style={{fontSize: 10}}> දුරකතන අංකය </Text>
                             </View>
@@ -216,21 +243,6 @@ const CustomerBase = ({navigation}) => {
                             </View>
 
                             <Text style={styles.listCardItemDesc}>{items.identityNo}</Text>
-                        </View>
-                        <View style={styles.listCardItem}>
-                            <View style={{flexDirection: 'column'}}>
-                                <Text style={styles.listCardItemHeader}>Total Orders </Text>
-                                <Text style={{fontSize: 10}}> මුළු ඇණවුම් </Text>
-                            </View>
-
-                            <Text style={styles.listCardItemDesc}>{items.orderCount}</Text>
-                        </View>
-                        <View style={styles.listCardItem}>
-                            <View style={{flexDirection: 'column'}}>
-                                <Text style={styles.listCardItemHeader}>Last Order </Text>
-                                <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
-                            </View>
-                            <Text style={styles.listCardItemDesc}>{items.lastOrderDate}</Text>
                         </View>
                     </Card>
                 ))}
@@ -253,7 +265,7 @@ const CustomerBase = ({navigation}) => {
                 onBackdropPress={toggleOverlay}>
                 <Card containerStyle={styles.overlayCard}>
                     <Card.Title style={{fontSize: 17}}>
-                        New Customer | නව ගණුදෙනුකරුවන්
+                        New Operators | නව ක්රියාකරුවන්
                     </Card.Title>
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -267,6 +279,45 @@ const CustomerBase = ({navigation}) => {
                             placeholder="Enter here..."
                             value={name}
                             onChangeText={val => setName(val)}
+                        />
+                    </View>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Username</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>පරිශීලක නාමය</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder="Enter here..."
+                            value={username}
+                            onChangeText={val => setUsername(val)}
+                        />
+                    </View>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Email</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>විද්යුත් තැපෑල</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder="Enter here..."
+                            value={email}
+                            onChangeText={val => setEmail(val)}
+                        />
+                    </View>
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Password</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>රහස් පදය</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            placeholder="Enter here..."
+                            value={password}
+                            onChangeText={val => setPassword(val)}
                         />
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -318,7 +369,7 @@ const CustomerBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '45%',color:Constants.COLORS.BLACK}}
+                            style={{width: '45%', color: Constants.COLORS.BLACK}}
                             color={'red'}
                             mode='dropdown'
                             selectedValue={searchType}
@@ -326,9 +377,9 @@ const CustomerBase = ({navigation}) => {
                             onValueChange={(itemValue, itemIndex) => {
                                 setSearchType(itemValue)
                             }}>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Select Type'} value={''}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'NIC'} value={'nic'}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Name'} value={'name'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Select Type'} value={''}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'NIC'} value={'nic'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Name'} value={'name'}/>
                         </Picker>
                         <Input
                             containerStyle={styles.inputContainerStyle}
@@ -456,4 +507,5 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CustomerBase;
+export default OperatorBase;
+

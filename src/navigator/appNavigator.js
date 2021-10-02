@@ -14,6 +14,7 @@ import ProfileScreen from '../screens/profile/base';
 import AboutScreen from '../screens/about/base';
 import InvoiceDetailsBase from "../screens/invoice/details/base";
 import PayList from "../screens/invoice/payments/base";
+import OperatorScreen from "../screens/operators/base";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import * as Constants from '../utils/constants';
@@ -54,6 +55,11 @@ const AppStack = () => {
                             ? 'calculator'
                             : 'calculator-outline';
                         size = 27;
+                    }else if (route.name === 'Operators') {
+                        iconName = focused
+                            ? 'man'
+                            : 'man-outline';
+                        size = 27;
                     }
 
                     return <IconI name={iconName} size={size} color={color}/>;
@@ -71,7 +77,7 @@ const AppStack = () => {
             {role==='ROLE_ADMIN'&&(
                 <Stack.Screen name="Approve" component={ApproveScreen}/>
             )}
-
+            <Stack.Screen name="Operators" component={OperatorScreen}/>
         </Tab.Navigator>
     )
 
