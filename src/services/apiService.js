@@ -22,6 +22,7 @@ export const callApi = async (apiObject) => {
 
     headers = {
         'Content-Type': apiObject.urlencoded ? 'application/x-www-form-urlencoded' : apiObject.multipart ? 'multipart/form-data' : 'application/json',
+        'factory':await AsyncStorage.getItem(StorageStrings.FACTORYID)
     };
     if (apiObject.authentication) {
         let access_token = await AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);

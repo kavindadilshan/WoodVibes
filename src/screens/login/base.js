@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {BottomSheet, Button, Image, Input} from 'react-native-elements';
 import Icon from 'react-native-vector-icons/SimpleLineIcons';
@@ -14,6 +14,8 @@ import * as Constants from '../../utils/constants';
 import {loginUser, useAuthDispatch} from '../../context';
 import {StorageStrings} from "../../utils/constants";
 import {CommonActions} from "@react-navigation/native";
+import * as factoryServices from '../../services/factory';
+import DropDown from "../../components/dropDown";
 
 const LoginBase = ({navigation}) => {
 
@@ -24,6 +26,39 @@ const LoginBase = ({navigation}) => {
     const [email, setEmail] = useState({value: '', valid: true});
     const [password, setPassword] = useState({value: '', valid: true});
     const [loading, setLoading] = useState(false);
+    const [factoryList, setFactoryList] = useState([]);
+    const [selectedFactoryList, setSelectedFactoryList] = useState([]);
+    const [selectedFactoryId, setSelectedFactoryId] = useState('');
+    const [dropDownVisible,setDropDownVisible]=useState(true);
+
+
+    useEffect(async () => {
+        const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
+        if (factoryId !== null) {
+            setDropDownVisible(false);
+            setSelectedFactoryId(factoryId);
+        }
+        await getAllFactoryList();
+    }, [])
+
+    const getAllFactoryList = async () => {
+        factoryServices.getAllFactories()
+            .then(res => {
+                const list = [];
+                for (let i = 0; i < [res].length; i++) {
+                    list.push({
+                        id: res[i].factoryId,
+                        name: res[i].factoryName
+                    })
+                }
+
+                console.log(list)
+                setFactoryList(list)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+    }
 
     const forgotPasswordOnPress = () => {
         setForgotPasswordVisible(!forgotPasswordVisible)
@@ -35,16 +70,23 @@ const LoginBase = ({navigation}) => {
     }
 
     const loginOnPress = async () => {
-
-        email.valid = Validation.textFieldValidator(email.value.trim(), 1);
-        password.valid = Validation.textFieldValidator(password.value.trim(), 1);
-        setEmail({value: email.value, valid: email.valid});
-        setPassword({value: password.value, valid: password.valid});
-
-        if (email.valid && password.valid) {
-            setLoading(!loading);
-            await loginHandler();
+        if (selectedFactoryId !== '') {
+            await AsyncStorage.setItem(StorageStrings.FACTORYID, selectedFactoryId.toString());
         }
+        if (await AsyncStorage.getItem(StorageStrings.FACTORYID) !== null) {
+            email.valid = Validation.textFieldValidator(email.value.trim(), 1);
+            password.valid = Validation.textFieldValidator(password.value.trim(), 1);
+            setEmail({value: email.value, valid: email.valid});
+            setPassword({value: password.value, valid: password.valid});
+
+            if (email.valid && password.valid) {
+                setLoading(!loading);
+                await loginHandler();
+            }
+        } else {
+            commonFunc.notifyMessage('Please select your factory!', 0);
+        }
+
 
     }
 
@@ -59,7 +101,7 @@ const LoginBase = ({navigation}) => {
                     await AsyncStorage.setItem(StorageStrings.LOGGED, 'true');
                     await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
                     await AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
-                    await AsyncStorage.setItem(StorageStrings.ROLE,response.role);
+                    await AsyncStorage.setItem(StorageStrings.ROLE, response.role);
                     navigation.dispatch(
                         CommonActions.reset({
                             index: 1,
@@ -80,21 +122,47 @@ const LoginBase = ({navigation}) => {
 
     return (
         <View>
-            <ScrollView contentContainerStyle={{flexGrow: 1}}>
+            <ScrollView contentContainerStyle={{flexGrow: 1}} nestedScrollEnabled={true}
+                        keyboardShouldPersistTaps="handled">
                 <View style={styles.container}>
                     <View style={styles.logo}>
-                        <View style={{width:  Dimensions.get('window').width/100*60,height:Dimensions.get('window').width/100*60,marginLeft:'5%'}}>
+                        <View style={{
+                            width: Dimensions.get('window').width / 100 * 60,
+                            height: Dimensions.get('window').width / 100 * 60,
+                            marginLeft: '5%'
+                        }}>
                             <Image
                                 source={require('../../resources/images/logo.png')}
-                                style={{width:'100%',height:'100%'}}
+                                style={{width: '100%', height: '100%'}}
                                 PlaceholderContent={<ActivityIndicator/>}
                                 resizeMode={'contain'}
                             />
                         </View>
 
                     </View>
-
                     <Text style={styles.title}>Welcome to {Constants.APP_NAME}</Text>
+                    {dropDownVisible && (
+                        <View style={styles.dropdownContent}>
+                            <Text style={styles.dropdownTile}>Factory</Text>
+                            <View style={{width: '70%'}}>
+                                <DropDown
+                                    onItemSelect={async (item) => {
+                                        setSelectedFactoryList(item);
+                                        setSelectedFactoryId(item.id);
+                                    }}
+                                    selectedItems={selectedFactoryList}
+                                    onRemoveItem={(item, index) => {
+                                        const items = selectedFactoryList.filter((sitem) => sitem.id !== item.id);
+                                        setSelectedFactoryList(items)
+                                    }}
+                                    items={factoryList}
+                                    placeholder={"Select Factory"}
+                                />
+                            </View>
+
+                        </View>
+                    )}
+
                     <TextInput
                         placeholder={"Username"}
                         leftIcon={
@@ -194,7 +262,7 @@ const styles = StyleSheet.create({
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').width,
         justifyContent: 'center',
-        alignItems:'center'
+        alignItems: 'center'
     },
     title: {
         marginTop: 20,
@@ -263,6 +331,11 @@ const styles = StyleSheet.create({
         marginTop: 5,
         fontWeight: "bold",
     },
+    dropdownTile: {
+        fontSize: 15,
+        color: Constants.COLORS.BLACK,
+        fontWeight: "bold",
+    },
     bottomSheetText: {
         fontSize: 16,
         color: Constants.COLORS.BLACK,
@@ -287,6 +360,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: Constants.COLORS.RED,
     },
+    dropdownContent: {
+        width: '90%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginVertical: 10,
+        marginTop: 25
+    }
 });
 
 export default LoginBase;
