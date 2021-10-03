@@ -17,13 +17,15 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [selectedWoodDetails, setSelectedWoodDetails] = useState({});
     const [invoiceDetailsList, setInvoiceDetailsList] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [customerName,setCustomerName]=useState('');
-    const [totalAmount,setTotalAmount]=useState('');
-    const [invoiceId,setInvoiceId]=useState();
-    const [invoiceIdentityNum,setInvoiceIdentityNum]=useState();
+    const [customerName, setCustomerName] = useState('');
+    const [totalAmount, setTotalAmount] = useState('');
+    const [invoiceId, setInvoiceId] = useState();
+    const [invoiceIdentityNum, setInvoiceIdentityNum] = useState();
+    const [role, setRole] = useState();
 
     useEffect(async () => {
         setLoading(true);
+        setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
         setInvoiceId(route.params.invoiceId);
         setInvoiceIdentityNum(route.params.invoiceNo.toString())
         await getInvoiceById(route.params.invoiceId)
@@ -70,7 +72,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const headerRightBtn = (
         <Button
             title="Pay List"
-            onPress={()=>navigation.navigate('PayList',{invoiceId:invoiceId})}
+            onPress={() => navigation.navigate('PayList', {invoiceId: invoiceId})}
             containerStyle={styles.addNewButtonContainerStyle}
             buttonStyle={styles.addNewButtonStyle}
             titleStyle={styles.addNewButtonTitleStyle}
@@ -80,7 +82,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     return (
         <View style={styles.container}>
             <TabHeader title='Invoice Details' backButton={true} navigation={navigation}
-                       rightComponent={headerRightBtn}/>
+                       rightComponent={role === 'ROLE_ADMIN' ? headerRightBtn : null}/>
             <ScrollView contentContainerStyle={{paddingBottom: 10}}>
                 <Card containerStyle={styles.orderCard}>
                     <Card.Title style={{fontSize: 18}}>Invoice Details | ඉන්වොයිසි විස්තර</Card.Title>
@@ -158,7 +160,8 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                                 </View>
                                 <Divider style={{marginVertical: 5}}/>
                                 <View style={styles.listItemHeaderItem}>
-                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Cubic Feet (අඩි)</Text>
+                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Cubic Feet
+                                        (අඩි)</Text>
                                     <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>ඒකක මිල</Text>
                                     <Text
                                         style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>වටිනාකම (Rs.)</Text>
