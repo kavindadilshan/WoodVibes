@@ -6,7 +6,7 @@ export async function getAllOperators(data,body) {
     apiObject.authentication = true;
     apiObject.isBasicAuth = false;
     apiObject.urlencoded = false;
-    apiObject.endpoint = `api/user/list-operators/${data.factoryId}?size=10&page=${data.page}`;
+    apiObject.endpoint = `api/user/list-operators/${data.factoryId}`;
     apiObject.multipart = false;
     apiObject.body = body;
     apiObject.isRefreshToken = false;
