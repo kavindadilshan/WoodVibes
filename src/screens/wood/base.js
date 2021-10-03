@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {View, StyleSheet, Text, ScrollView} from "react-native";
 import TabHeader from "../../components/tabHeader";
-import {Button, Card} from "react-native-elements";
+import {Button, Card, Input, Overlay} from "react-native-elements";
 import * as Constants from "../../utils/constants";
 import * as Constance from "../../utils/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,10 +9,17 @@ import {StorageStrings} from "../../utils/constants";
 import * as WoodServices from "../../services/wood";
 import * as commonFunc from "../../utils/commonFunc";
 import Loading from "../../components/loading";
+import AlertMessage from "../../components/AlertMessage";
+import * as InvoiceServices from "../../services/invoice";
 
 const WoodBase = ({navigation}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [visible,setVisible]=useState(false);
+    const [newCost,setNewCost]=useState('');
+    const [oldCost,setOldCost]=useState('');
+    const [showAlert,setShowAlert]=useState(false);
+    const [selectedId,setSelectedId]=useState();
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
@@ -55,17 +62,70 @@ const WoodBase = ({navigation}) => {
             buttonStyle={styles.addNewButtonStyle}
             titleStyle={styles.addNewButtonTitleStyle}
         />
-    )
+    );
+
+    const toggleOverlay = () => {
+        setVisible(!visible);
+        setNewCost('');
+    };
+
+    async function editCost(item) {
+        switch (item) {
+            case 'yes':
+                setShowAlert(false);
+                setLoading(true);
+                const data = {
+                    id: selectedId,
+                    cost: newCost
+                }
+                await WoodServices.editCostById(data)
+                    .then(async response => {
+                        setWoodTypeList([])
+                        setLoading(false);
+                        setVisible(false);
+                        commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
+                        await getWoodTypeLists();
+                    })
+                    .catch(error => {
+                        setLoading(false);
+                        commonFunc.notifyMessage('You connection was interrupted', 0);
+                    })
+                break;
+            case 'no':
+                setShowAlert(false);
+                break;
+            default:
+                break;
+        }
+    }
 
     return (
         <View style={styles.container}>
             <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-                <TabHeader title="Wood Cost" rightComponent={headerRightBtn}/>
+                <TabHeader title="Wood Cost"/>
                 {woodTypeList.map((item, i) => (
-                    <Card containerStyle={styles.listCard}>
-                        <Card.Title style={styles.listCardTitle}>
-                            {item.name}
-                        </Card.Title>
+                    <Card containerStyle={styles.listCard} key={i}>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 5
+                        }}>
+                            <Card.Title style={styles.listCardTitle}>
+                                {item.name}
+                            </Card.Title>
+                            <Button
+                                title="Edit"
+                                onPress={() => {
+                                    setSelectedId(item.id);
+                                    setOldCost(item.cost);
+                                    setVisible(!visible);
+                                }}
+                                containerStyle={styles.addNewButtonContainerStyle}
+                                buttonStyle={styles.addNewButtonStyle}
+                                titleStyle={styles.addNewButtonTitleStyle}
+                            />
+                        </View>
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
                             <View style={{flexDirection: 'column'}}>
@@ -83,7 +143,59 @@ const WoodBase = ({navigation}) => {
                         </View>
                     </Card>
                 ))}
+                <Overlay
+                    isVisible={visible}
+                    overlayStyle={styles.overlay}
+                    onBackdropPress={toggleOverlay}>
+                    <Card containerStyle={styles.overlayCard}>
+                        <Card.Title style={{fontSize: 17}}>
+                            Wood Cost | දැව පිරිවැය
+                        </Card.Title>
+                        <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                            <View>
+                                <Text>Old Wood Cost</Text>
+                                <Text style={{fontFamily: 'Amalee'}}>පැරණි දැව පිරිවැය</Text>
+                            </View>
+                            <Input
+                                containerStyle={styles.inputContainerStyle}
+                                inputContainerStyle={{borderBottomWidth: 0}}
+                                value={`Rs. ${oldCost ? (oldCost).toFixed(2) : 0}`}
+                                disabled={true}
+                            />
+                        </View>
+                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                            <View>
+                                <Text>New Wood Cost</Text>
+                                <Text style={{fontFamily: 'Amalee'}}>නව දැව පිරිවැය</Text>
+                            </View>
+                            <Input
+                                containerStyle={styles.inputContainerStyle}
+                                inputContainerStyle={{borderBottomWidth: 0}}
+                                placeholder="Enter here..."
+                                value={newCost}
+                                onChangeText={val => setNewCost(val)}
+                                keyboardType='decimal-pad'
+                            />
+                        </View>
+                        <Button
+                            title="Edit | සංස්කරණය කරන්න"
+                            onPress={() => setShowAlert(true)}
+                            containerStyle={styles.buttonContainerStyle}
+                            buttonStyle={styles.buttonStyle}
+                            titleStyle={styles.buttonTitleStyle}
+                        />
+                    </Card>
+                </Overlay>
                 <Loading isVisible={loading}/>
+                <AlertMessage
+                    show={showAlert}
+                    title={"Do you want to delete this record?"}
+                    onCancelPressed={() => editCost('yes')}
+                    onConfirmPressed={() => editCost('no')}
+                    cancelText={'Yes'}
+                    confirmText={'Not Now'}
+                />
             </ScrollView>
         </View>
     )
@@ -99,7 +211,6 @@ const styles = StyleSheet.create({
         height: 40,
     },
     addNewButtonStyle: {
-        height: 40,
         paddingHorizontal: 20,
         backgroundColor: Constants.COLORS.PRIMARY_BLUE,
         borderRadius: 10,

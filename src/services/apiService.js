@@ -51,7 +51,8 @@ export const callApi = async (apiObject) => {
                     //navigations
                 }
             }
-            result = await {...response.data, status: response.data.success ? 1 : 0};
+            // result = await {...response.data, status: response.data.success ? 1 : 0};
+            result = await {...response.data};
         })
         .catch(async error => {
 

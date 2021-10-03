@@ -19,6 +19,8 @@ const PayList = ({navigation, route}) => {
     const [selectedPayId, setSelectedPayId] = useState();
     const [invoiceId,setInvoiceId]=useState();
     const [payAmount,setPayAmount]=useState();
+    const [status,setStatus]=useState('');
+    const [discount,setDiscount]=useState('');
 
     useEffect(async () => {
         setLoading(true);
@@ -33,6 +35,7 @@ const PayList = ({navigation, route}) => {
                     setPayList(response.paymentDetails);
                     setTotalAmount(response.totalAmount.toFixed(2));
                     setPayableAmount(response.payableAmount.toFixed(2));
+                    setStatus(response.status)
                 }
 
             })
@@ -68,6 +71,11 @@ const PayList = ({navigation, route}) => {
         const data={
             payAmount:payAmount
         }
+        if (status!=='ACTIVE'){
+            Object.assign(data,{
+                discount:discount
+            })
+        }
         setLoading(true)
         await InvoiceServices.invoicePay(invoiceId,data)
             .then(async response => {
@@ -79,6 +87,12 @@ const PayList = ({navigation, route}) => {
                 setLoading(false)
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
+    }
+
+    const onTextChange=(val)=>{
+        const discountedPrice=payableAmount-val;
+        setPayableAmount(discountedPrice);
+        setDiscount(val)
     }
 
     return (
@@ -116,6 +130,23 @@ const PayList = ({navigation, route}) => {
                             disabled={true}
                         />
                     </View>
+                    {status!=='ACTIVE'&&(
+                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                            <View>
+                                <Text>Discount</Text>
+                                <Text style={{fontFamily: 'Amalee'}}>වට්ටම්</Text>
+                            </View>
+                            <Input
+                                containerStyle={styles.inputContainerStyle}
+                                inputContainerStyle={{borderBottomWidth: 0}}
+                                textAlign={'right'}
+                                placeholder='Discount'
+                                onChangeText={val => onTextChange(val)}
+                                value={discount}
+                            />
+                        </View>
+                    )}
+
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
                             <Text>Pay Amount</Text>
