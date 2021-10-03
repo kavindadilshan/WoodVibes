@@ -45,7 +45,7 @@ const HomeBase = ({navigation}) => {
     const [selectedCustomerList, setSelectedCustomerList] = useState([]);
     const [selectedWoodTypeList, setSelectedWoodTypeList] = useState([]);
     const [selectedWoodCost, setSelectedWoodCost] = useState();
-    const [role,setRole]=useState();
+    const [role, setRole] = useState();
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
@@ -113,29 +113,31 @@ const HomeBase = ({navigation}) => {
 
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
         const data = {
+            role:await AsyncStorage.getItem(StorageStrings.ROLE),
+            userId: await AsyncStorage.getItem(StorageStrings.USER_ID),
             customerId: selectedCustomerId,
             factoryId: Number(factoryId),
             totalAmount: Number(totalAmount),
-            discount: Number( role==='ROLE_ADMIN'?discount:0),
-            payAmount: Number(role==='ROLE_ADMIN'?payAmount:0),
-            amount: Number(role==='ROLE_ADMIN'?payAmount:0),
+            discount: Number(role === 'ROLE_ADMIN' ? discount : 0),
+            payAmount: Number(role === 'ROLE_ADMIN' ? payAmount : 0),
+            amount: Number(role === 'ROLE_ADMIN' ? payAmount : totalAmount),
             invoiceDetails: list
         }
         setLoading(true)
         await InvoiceServices.saveInvoice(data)
-            .then(
-                commonFunc.notifyMessage('Invoice saved successfully!', 1),
-                setGroupList([]),
-                setTotalAmount(null),
-                setDiscount(''),
-                setNetAmount(null),
-                setPayAmount(''),
-                setLength(''),
-                setCircumference(''),
-                setAddingList([]),
-                setSelectedCustomerList([]),
-                setSelectedWoodTypeList([])
-            )
+            .then(res => {
+                commonFunc.notifyMessage('Invoice saved successfully!', 1);
+                setGroupList([]);
+                setTotalAmount(null);
+                setDiscount('');
+                setNetAmount(null);
+                setPayAmount('');
+                setLength('');
+                setCircumference('');
+                setAddingList([]);
+                setSelectedCustomerList([]);
+                setSelectedWoodTypeList([]);
+            })
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
@@ -159,7 +161,7 @@ const HomeBase = ({navigation}) => {
                 setTotalAmount(totalValue.toString());
                 setNetAmount(totalValue.toString());
                 setEditable(true);
-                if (role!=='ROLE_ADMIN'){
+                if (role !== 'ROLE_ADMIN') {
                     setPayAmount(0)
                 }
 
@@ -517,7 +519,7 @@ const HomeBase = ({navigation}) => {
                                         disabled={true}
                                     />
                                 </View>
-                                {role==='ROLE_ADMIN'&&(
+                                {role === 'ROLE_ADMIN' && (
                                     <View>
                                         <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                                             <View>
@@ -590,31 +592,32 @@ const HomeBase = ({navigation}) => {
                                             </View>
                                             <Divider style={{marginVertical: 5}}/>
                                             <ScrollView horizontal={true}>
-                                                <View style={{flexDirection:'column'}}>
-                                                    <View style={{flexDirection:'row'}}>
+                                                <View style={{flexDirection: 'column'}}>
+                                                    <View style={{flexDirection: 'row'}}>
                                                         <Text
-                                                            style={[styles.listItemHeaderItemTitle,{width: 100}]}>දිග</Text>
-                                                        <Text style={[styles.listItemHeaderItemTitle,{width: 100}]}>වට</Text>
-                                                        <Text style={[styles.listItemHeaderItemTitle,{width: 150}]}>Cubic
+                                                            style={[styles.listItemHeaderItemTitle, {width: 100}]}>දිග</Text>
+                                                        <Text
+                                                            style={[styles.listItemHeaderItemTitle, {width: 100}]}>වට</Text>
+                                                        <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>Cubic
                                                             ප්‍රමාණය</Text>
-                                                        <Text style={[styles.listItemHeaderItemTitle,{width: 150}]}>ඒකක
+                                                        <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>ඒකක
                                                             මිල</Text>
                                                         <Text
-                                                            style={[styles.listItemHeaderItemTitle,{width: 150}]}>වටිනාකම</Text>
+                                                            style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම</Text>
                                                     </View>
 
                                                     {/*<View style={styles.listItemBody}>*/}
-                                                    <View style={{flexDirection:'row'}}>
+                                                    <View style={{flexDirection: 'row'}}>
                                                         <Text
-                                                            style={[styles.listItemBodyItemText,{width: 100}]}>{tableTotalValues(items.subList).totalLength}</Text>
+                                                            style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalLength}</Text>
                                                         <Text
-                                                            style={[styles.listItemBodyItemText,{width: 100}]}>{tableTotalValues(items.subList).totalCircumference}</Text>
+                                                            style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalCircumference}</Text>
                                                         <Text
-                                                            style={[styles.listItemBodyItemText,{width: 150}]}>{tableTotalValues(items.subList).totalCubic}</Text>
+                                                            style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalCubic}</Text>
                                                         <Text
-                                                            style={[styles.listItemBodyItemText,{width: 150}]}>{tableTotalValues(items.subList).totalUnits}</Text>
+                                                            style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalUnits}</Text>
                                                         <Text
-                                                            style={[styles.listItemBodyItemText,{width: 150}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
+                                                            style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
                                                     </View>
                                                 </View>
 
@@ -639,11 +642,12 @@ const HomeBase = ({navigation}) => {
                                         </View>
                                         <Divider style={{marginVertical: 5}}/>
                                         <ScrollView horizontal={true}>
-                                            <View style={{flexDirection:'column'}}>
-                                                <View style={{flexDirection:'row'}}>
+                                            <View style={{flexDirection: 'column'}}>
+                                                <View style={{flexDirection: 'row'}}>
                                                     <Text
                                                         style={[styles.listItemHeaderItemTitle, {width: 100}]}>දිග</Text>
-                                                    <Text style={[styles.listItemHeaderItemTitle, {width: 100}]}>වට</Text>
+                                                    <Text
+                                                        style={[styles.listItemHeaderItemTitle, {width: 100}]}>වට</Text>
                                                     <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>Cubic
                                                         ප්‍රමාණය</Text>
                                                     <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>ඒකක

@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View,Appearance} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, View, Appearance} from 'react-native';
 import {Button, Card, Input, Overlay} from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
 import TabHeader from '../../components/tabHeader';
 import * as InvoiceServices from '../../services/invoice';
+import * as OperatorService from "../../services/operators";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {StorageStrings} from "../../utils/constants";
 import * as CustomerServices from "../../services/customer";
@@ -16,7 +17,7 @@ import gif from "../../resources/gif/loading.gif";
 
 import {Picker} from "@react-native-picker/picker";
 
-let asDarkMode= Appearance.getColorScheme()==='dark'
+let asDarkMode = Appearance.getColorScheme() === 'dark'
 
 const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 0;
@@ -36,10 +37,12 @@ const InvoiceBase = ({navigation}) => {
     const [searchOverlay, setSearchOverlay] = useState(false);
     const [searchType, setSearchType] = useState('');
     const [finished, setFinished] = useState(false);
+    const [role, setRole] = useState();
 
     useEffect(() => {
         navigation.addListener('focus', async () => {
             setLoading(true);
+            setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
             await getAllInvoiceList(0, [], true);
         });
     }, [navigation])
@@ -47,7 +50,8 @@ const InvoiceBase = ({navigation}) => {
     async function getAllInvoiceList(pageNo, isEmpty, first) {
         const data = {
             factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID),
-            page: pageNo
+            page: pageNo,
+            userId:await AsyncStorage.getItem(StorageStrings.USER_ID)
         }
 
         let body;
@@ -65,32 +69,33 @@ const InvoiceBase = ({navigation}) => {
             }
         }
 
-        await InvoiceServices.getAllInvoice(data, first === undefined ? body : null)
-            .then(response => {
-                let list;
-                if (isEmpty) {
-                    list = isEmpty
-                } else {
-                    list = invoiceList;
-                }
+        role === 'ROLE_ADMIN' ? await InvoiceServices.getAllInvoice(data, first === undefined ? body : null) :
+            await OperatorService.operatorInvoice(data, first === undefined ? body : null)
+                .then(response => {
+                    let list;
+                    if (isEmpty) {
+                        list = isEmpty
+                    } else {
+                        list = invoiceList;
+                    }
 
-                response.invoiceList.map(item => {
-                    list.push({
-                        id: item.id,
-                        customerId: item.customerId,
-                        totalAmount: item.totalAmount,
-                        invoiceDate: item.invoiceDate,
-                        invoiceNo: item.invoiceNo
+                    response.invoiceList.map(item => {
+                        list.push({
+                            id: item.id,
+                            customerId: item.customerId,
+                            totalAmount: item.totalAmount,
+                            invoiceDate: item.invoiceDate,
+                            invoiceNo: item.invoiceNo
+                        })
                     })
+                    if (pageNo + 1 >= response.pageCount) {
+                        setFinished(true);
+                    }
+                    setInvoiceList(list);
                 })
-                if (pageNo + 1 >= response.pageCount) {
-                    setFinished(true);
-                }
-                setInvoiceList(list);
-            })
-            .catch(error => {
-                commonFunc.notifyMessage('You connection was interrupted', 0);
-            })
+                .catch(error => {
+                    commonFunc.notifyMessage('You connection was interrupted', 0);
+                })
         setLoading(false);
         setMiniLoader(false);
     }
@@ -244,7 +249,7 @@ const InvoiceBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '45%',backgroundColor:Constants.COLORS.BLACK}}
+                            style={{width: '45%', backgroundColor: Constants.COLORS.BLACK}}
                             mode='dropdown'
                             selectedValue={searchType}
                             dropdownIconColor={Constants.COLORS.BLACK}
@@ -256,10 +261,10 @@ const InvoiceBase = ({navigation}) => {
                                     setSearchKey('')
                                 }
                             }}>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Select Type'} value={''}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'NIC'} value={'nic'}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Name'} value={'name'}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Invoice No'} value={'invoice'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Select Type'} value={''}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'NIC'} value={'nic'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Name'} value={'name'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Invoice No'} value={'invoice'}/>
                         </Picker>
                         <Input
                             containerStyle={styles.inputContainerStyle}
@@ -270,15 +275,15 @@ const InvoiceBase = ({navigation}) => {
                                 if (searchType !== 'invoice') {
                                     setSearchKey(val)
                                 } else {
-                                    if (/^\d+$/.test(val.toString().slice(3))){
-                                        if (val.length<=2){
+                                    if (/^\d+$/.test(val.toString().slice(3))) {
+                                        if (val.length <= 2) {
                                             val = searchKey.replace(/^IN-+/, 'IN-');
                                         }
                                         setSearchKey(val)
                                     }
                                 }
                             }}
-                            keyboardType={searchType==='invoice'?'number-pad':'default'}
+                            keyboardType={searchType === 'invoice' ? 'number-pad' : 'default'}
                         />
                     </View>
                     <Button

@@ -24,3 +24,15 @@ export async function addOperator(body){
     apiObject.body = body;
     return await ApiService.callApi(apiObject);
 }
+
+export async function operatorInvoice(data){
+    const apiObject = {};
+    apiObject.method = 'POST';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/invoice/operator/${data.factoryId}/${data.userId}?size=10&page=${data.page}`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    return await ApiService.callApi(apiObject);
+}
