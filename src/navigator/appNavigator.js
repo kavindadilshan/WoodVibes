@@ -15,18 +15,20 @@ import AboutScreen from '../screens/about/base';
 import InvoiceDetailsBase from "../screens/invoice/details/base";
 import PayList from "../screens/invoice/payments/base";
 import OperatorScreen from "../screens/operators/base";
+import WoodScreen from "../screens/wood/base";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import * as Constants from '../utils/constants';
 import {useAuthState} from "../context";
 import {StorageStrings} from "../utils/constants";
+import {View} from "react-native";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 
 const AppStack = () => {
-    const [role,setRole]=useState();
+    const [role, setRole] = useState();
     useEffect(async () => {
         setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
     })
@@ -55,10 +57,15 @@ const AppStack = () => {
                             ? 'calculator'
                             : 'calculator-outline';
                         size = 27;
-                    }else if (route.name === 'Operators') {
+                    } else if (route.name === 'Operators') {
                         iconName = focused
                             ? 'man'
                             : 'man-outline';
+                        size = 27;
+                    } else if (route.name === 'Wood') {
+                        iconName = focused
+                            ? 'leaf'
+                            : 'leaf-outline';
                         size = 27;
                     }
 
@@ -74,10 +81,15 @@ const AppStack = () => {
             <Stack.Screen name="Home" component={HomeScreen}/>
             <Stack.Screen name="Customers" component={CustomersScreen}/>
             <Stack.Screen name="WoodSetup" component={InvoiceBase}/>
-            {role==='ROLE_ADMIN'&&(
+            {role === 'ROLE_ADMIN' && (
                 <Stack.Screen name="Approve" component={ApproveScreen}/>
             )}
-            <Stack.Screen name="Operators" component={OperatorScreen}/>
+            {role === 'ROLE_ADMIN' && (
+                <Stack.Screen name="Wood" component={WoodScreen}/>
+            )}
+            {role === 'ROLE_ADMIN' && (
+                <Stack.Screen name="Operators" component={OperatorScreen}/>
+            )}
         </Tab.Navigator>
     )
 
