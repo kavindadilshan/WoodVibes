@@ -161,6 +161,8 @@ const HomeBase = ({navigation}) => {
                 addingList.push({
                     woodMeasurementCostId: selectedWoodTypeId,
                     woodType: selectedWoodDetails.name,
+                    length: length,
+                    circumference: circumference,
                     cubicQuantity: cubicQuantity.toFixed(2),
                     unitPrice: selectedWoodCost,
                     totalAmount: totalValue
@@ -215,7 +217,8 @@ const HomeBase = ({navigation}) => {
 
     const onChangeText = val => {
         setDiscount(val);
-        const netValue = (totalAmount - (totalAmount * val / 100)).toFixed(2);
+        // const netValue = (totalAmount - (totalAmount * val / 100)).toFixed(2);
+        const netValue = totalAmount - val;
         setNetAmount(netValue.toString())
     }
 
@@ -255,12 +258,22 @@ const HomeBase = ({navigation}) => {
         let totalCubic = 0;
         let totalUnits = 0;
         let totalAmounts = 0;
+        let totalLength = 0;
+        let totalCircumference = 0;
         for (let i = 0; i < array.length; i++) {
+            totalLength += Number(array[i].length);
+            totalCircumference += Number(array[i].circumference);
             totalCubic += Number(array[i].cubicQuantity);
             totalUnits = array[i].unitPrice;
             totalAmounts += Number(array[i].totalAmount)
         }
-        return {totalCubic: totalCubic.toFixed(2), totalUnits: totalUnits, totalAmounts: totalAmounts.toFixed(2)}
+        return {
+            totalCubic: totalCubic.toFixed(2),
+            totalUnits: totalUnits,
+            totalAmounts: totalAmounts.toFixed(2),
+            totalLength: totalLength.toFixed(2),
+            totalCircumference: totalCircumference.toFixed(2)
+        }
     }
 
     const toggleOverlay = (i) => {
@@ -321,7 +334,7 @@ const HomeBase = ({navigation}) => {
                             <IconI
                                 name='log-out-outline'
                                 size={35}
-                                onPress={()=>setShowAlert2(true)}
+                                onPress={() => setShowAlert2(true)}
                                 style={[styles.headerIcon, {marginLeft: 10}]}
                                 color={Constants.COLORS.PLACEHOLDER_ASH}
                             />
@@ -513,7 +526,7 @@ const HomeBase = ({navigation}) => {
                                         keyboardType='decimal-pad'
                                         onChangeText={val => onChangeText(val)}
                                         disabled={!editable}
-                                        maxLength = {2}
+                                        maxLength={2}
                                     />
                                 </View>
                                 <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
@@ -567,25 +580,38 @@ const HomeBase = ({navigation}) => {
                                                     List</Text>
                                             </View>
                                             <Divider style={{marginVertical: 5}}/>
-                                            <View style={styles.listItemHeaderItem}>
-                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic
-                                                    ප්‍රමාණය</Text>
-                                                <Text style={[styles.listItemHeaderItemTitle, {width: '25%'}]}>ඒකක
-                                                    මිල</Text>
-                                                <Text
-                                                    style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>වටිනාකම</Text>
-                                                <View style={{width: '10%'}}></View>
-                                            </View>
-                                        </View>
-                                        <View style={styles.listItemBody}>
-                                            <View style={styles.listItemBodyItem}>
-                                                <Text
-                                                    style={[styles.listItemBodyItemText, {width: '35%'}]}>{tableTotalValues(items.subList).totalCubic}</Text>
-                                                <Text
-                                                    style={[styles.listItemBodyItemText, {width: '25%'}]}>{tableTotalValues(items.subList).totalUnits}</Text>
-                                                <Text
-                                                    style={[styles.listItemBodyItemText, {width: '40%'}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
-                                            </View>
+                                            <ScrollView horizontal={true}>
+                                                <View style={{flexDirection:'column'}}>
+                                                    <View style={{flexDirection:'row'}}>
+                                                        <Text
+                                                            style={[styles.listItemHeaderItemTitle,{width: 100}]}>දිග</Text>
+                                                        <Text style={[styles.listItemHeaderItemTitle,{width: 100}]}>වට</Text>
+                                                        <Text style={[styles.listItemHeaderItemTitle,{width: 150}]}>Cubic
+                                                            ප්‍රමාණය</Text>
+                                                        <Text style={[styles.listItemHeaderItemTitle,{width: 150}]}>ඒකක
+                                                            මිල</Text>
+                                                        <Text
+                                                            style={[styles.listItemHeaderItemTitle,{width: 150}]}>වටිනාකම</Text>
+                                                    </View>
+
+                                                    {/*<View style={styles.listItemBody}>*/}
+                                                    <View style={{flexDirection:'row'}}>
+                                                        <Text
+                                                            style={[styles.listItemBodyItemText,{width: 100}]}>{tableTotalValues(items.subList).totalLength}</Text>
+                                                        <Text
+                                                            style={[styles.listItemBodyItemText,{width: 100}]}>{tableTotalValues(items.subList).totalCircumference}</Text>
+                                                        <Text
+                                                            style={[styles.listItemBodyItemText,{width: 150}]}>{tableTotalValues(items.subList).totalCubic}</Text>
+                                                        <Text
+                                                            style={[styles.listItemBodyItemText,{width: 150}]}>{tableTotalValues(items.subList).totalUnits}</Text>
+                                                        <Text
+                                                            style={[styles.listItemBodyItemText,{width: 150}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
+                                                    </View>
+                                                </View>
+
+                                                {/*</View>*/}
+                                            </ScrollView>
+
                                         </View>
                                     </View>
 
@@ -603,44 +629,53 @@ const HomeBase = ({navigation}) => {
                                             <Text style={styles.listItemHeaderTitle}>{items.woodType}</Text>
                                         </View>
                                         <Divider style={{marginVertical: 5}}/>
-                                        <View style={styles.listItemHeaderItem}>
-                                            <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic
-                                                ප්‍රමාණය</Text>
-                                            <Text style={[styles.listItemHeaderItemTitle, {width: '25%'}]}>ඒකක
-                                                මිල</Text>
-                                            <Text
-                                                style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>වටිනාකම</Text>
-                                            <View style={{width: '10%'}}></View>
-                                        </View>
-                                    </View>
-
-                                    {/*{!tableLoading && (*/}
-                                    <View style={styles.listItemBody}>
-                                        {items.subList.map((item, j) => (
-                                            <View style={styles.listItemBodyItem} key={j}>
-                                                <Text
-                                                    style={[styles.listItemBodyItemText, {width: '35%'}]}>{item.cubicQuantity}</Text>
-                                                <Text
-                                                    style={[styles.listItemBodyItemText, {width: '25%'}]}>{item.unitPrice}</Text>
-                                                <Text
-                                                    style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.totalAmount}</Text>
-                                                <View style={{
-                                                    width: '10%',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <IconI
-                                                        name='close-circle-outline'
-                                                        size={25}
-                                                        style={styles.listItemCloseIcon}
-                                                        color={Constants.COLORS.RED}
-                                                        onPress={() => removeSelectedObject(i, j, groupList)}
-                                                    />
+                                        <ScrollView horizontal={true}>
+                                            <View style={{flexDirection:'column'}}>
+                                                <View style={{flexDirection:'row'}}>
+                                                    <Text
+                                                        style={[styles.listItemHeaderItemTitle, {width: 100}]}>දිග</Text>
+                                                    <Text style={[styles.listItemHeaderItemTitle, {width: 100}]}>වට</Text>
+                                                    <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>Cubic
+                                                        ප්‍රමාණය</Text>
+                                                    <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>ඒකක
+                                                        මිල</Text>
+                                                    <Text
+                                                        style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම</Text>
+                                                    <View style={{width: 50}}/>
+                                                </View>
+                                                <View style={styles.listItemBody}>
+                                                    {items.subList.map((item, j) => (
+                                                        <View style={styles.listItemBodyItem} key={j}>
+                                                            <Text
+                                                                style={[styles.listItemBodyItemText, {width: 100}]}>{item.length}</Text>
+                                                            <Text
+                                                                style={[styles.listItemBodyItemText, {width: 100}]}>{item.circumference}</Text>
+                                                            <Text
+                                                                style={[styles.listItemBodyItemText, {width: 150}]}>{item.cubicQuantity}</Text>
+                                                            <Text
+                                                                style={[styles.listItemBodyItemText, {width: 150}]}>{item.unitPrice}</Text>
+                                                            <Text
+                                                                style={[styles.listItemBodyItemText, {width: 150}]}>{item.totalAmount}</Text>
+                                                            <View style={{
+                                                                width: '10%',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center'
+                                                            }}>
+                                                                <IconI
+                                                                    name='close-circle-outline'
+                                                                    size={25}
+                                                                    style={styles.listItemCloseIcon}
+                                                                    color={Constants.COLORS.RED}
+                                                                    onPress={() => removeSelectedObject(i, j, groupList)}
+                                                                />
+                                                            </View>
+                                                        </View>
+                                                    ))}
                                                 </View>
                                             </View>
-                                        ))}
+                                        </ScrollView>
+
                                     </View>
-                                    {/*)}*/}
 
 
                                 </Card>
@@ -718,7 +753,7 @@ const HomeBase = ({navigation}) => {
                         CommonActions.reset({
                             index: 1,
                             routes: [
-                                { name: 'Login' },
+                                {name: 'Login'},
                             ],
                         })
                     );
@@ -831,7 +866,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: Constants.COLORS.BLACK,
         textAlign: 'center',
-        alignSelf: 'stretch'
+        alignSelf: 'stretch',
     },
     listItemBody: {},
     listItemBodyItem: {
