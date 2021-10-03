@@ -191,19 +191,19 @@ const OperatorBase = ({navigation}) => {
             <ScrollView
                 // contentContainerStyle={{paddingBottom: 10}}
                 showsVerticalScrollIndicator={false}
-                onScroll={({nativeEvent}) => {
-                    if (isCloseToBottom(nativeEvent)) {
-                        if (!finished) {
-                            setMiniLoader(!miniLoader)
-                            setPage(page + 1);
-                            getAllCustomersList(page + 1);
-                        }
-                    }
-                }}
+                // onScroll={({nativeEvent}) => {
+                //     if (isCloseToBottom(nativeEvent)) {
+                //         if (!finished) {
+                //             setMiniLoader(!miniLoader)
+                //             setPage(page + 1);
+                //             getAllCustomersList(page + 1);
+                //         }
+                //     }
+                // }}
 
             >
 
-                <FilterButton onPress={() => setSearchOverlay(true)}/>
+                {/*<FilterButton onPress={() => setSearchOverlay(true)}/>*/}
 
 
                 {customerList.map((items, i) => (
@@ -408,6 +408,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
+        paddingBottom:10
     },
     addNewButtonContainerStyle: {
         height: 40,
