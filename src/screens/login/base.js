@@ -102,6 +102,7 @@ const LoginBase = ({navigation}) => {
                     await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
                     await AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
                     await AsyncStorage.setItem(StorageStrings.ROLE, response.role);
+                    await AsyncStorage.setItem(StorageStrings.USER_ID,response.userId.toString())
                     navigation.dispatch(
                         CommonActions.reset({
                             index: 1,

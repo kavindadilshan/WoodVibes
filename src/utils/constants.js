@@ -28,4 +28,5 @@ export const StorageStrings={
   REFRESH_TOKEN:'REFRESH_TOKEN',
   FACTORYID:'FACTORYID',
   ROLE:'ROLE',
+  USER_ID:'USER_ID'
 }

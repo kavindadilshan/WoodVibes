@@ -45,9 +45,11 @@ const HomeBase = ({navigation}) => {
     const [selectedCustomerList, setSelectedCustomerList] = useState([]);
     const [selectedWoodTypeList, setSelectedWoodTypeList] = useState([]);
     const [selectedWoodCost, setSelectedWoodCost] = useState();
+    const [role,setRole]=useState();
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
+            setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
             await getAllCustomersList();
         });
         await getWoodTypeLists();
@@ -114,9 +116,9 @@ const HomeBase = ({navigation}) => {
             customerId: selectedCustomerId,
             factoryId: Number(factoryId),
             totalAmount: Number(totalAmount),
-            discount: Number(discount),
-            payAmount: Number(payAmount),
-            amount: Number(payAmount),
+            discount: Number( role==='ROLE_ADMIN'?discount:0),
+            payAmount: Number(role==='ROLE_ADMIN'?payAmount:0),
+            amount: Number(role==='ROLE_ADMIN'?payAmount:0),
             invoiceDetails: list
         }
         setLoading(true)
@@ -157,6 +159,9 @@ const HomeBase = ({navigation}) => {
                 setTotalAmount(totalValue.toString());
                 setNetAmount(totalValue.toString());
                 setEditable(true);
+                if (role!=='ROLE_ADMIN'){
+                    setPayAmount(0)
+                }
 
                 addingList.push({
                     woodMeasurementCostId: selectedWoodTypeId,
@@ -512,49 +517,53 @@ const HomeBase = ({navigation}) => {
                                         disabled={true}
                                     />
                                 </View>
-                                <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                                {role==='ROLE_ADMIN'&&(
                                     <View>
-                                        <Text>Discount (%)</Text>
-                                        <Text style={{fontFamily: 'Amalee'}}>වට්ටම් </Text>
+                                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                                            <View>
+                                                <Text>Discount (%)</Text>
+                                                <Text style={{fontFamily: 'Amalee'}}>වට්ටම් </Text>
+                                            </View>
+                                            <Input
+                                                containerStyle={styles.inputContainerStyle}
+                                                inputContainerStyle={{borderBottomWidth: 0}}
+                                                textAlign={'right'}
+                                                placeholder='Discount'
+                                                value={discount}
+                                                keyboardType='decimal-pad'
+                                                onChangeText={val => onChangeText(val)}
+                                                disabled={!editable}
+                                                maxLength={2}
+                                            />
+                                        </View>
+                                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                                            <View style={{width: '48%'}}>
+                                                <Text>Net Amount</Text>
+                                                <Text style={{fontFamily: 'Amalee', marginBottom: 8}}>ශුද්ධ මුදල</Text>
+                                                <Input
+                                                    containerStyle={{...styles.inputContainerStyle, width: '100%'}}
+                                                    inputContainerStyle={{borderBottomWidth: 0}}
+                                                    placeholder='Net Amount'
+                                                    value={`Rs. ${netAmount ? netAmount : 0}`}
+                                                    disabled={true}
+                                                />
+                                            </View>
+                                            <View style={{width: '48%'}}>
+                                                <Text>Pay Amount</Text>
+                                                <Text style={{fontFamily: 'Amalee', marginBottom: 8}}>ගෙවන මුදල</Text>
+                                                <Input
+                                                    containerStyle={{...styles.inputContainerStyle, width: '100%'}}
+                                                    inputContainerStyle={{borderBottomWidth: 0}}
+                                                    placeholder='Pay Amount'
+                                                    keyboardType='decimal-pad'
+                                                    value={payAmount}
+                                                    onChangeText={val => setPayAmount(val)}
+                                                    disabled={!editable}
+                                                />
+                                            </View>
+                                        </View>
                                     </View>
-                                    <Input
-                                        containerStyle={styles.inputContainerStyle}
-                                        inputContainerStyle={{borderBottomWidth: 0}}
-                                        textAlign={'right'}
-                                        placeholder='Discount'
-                                        value={discount}
-                                        keyboardType='decimal-pad'
-                                        onChangeText={val => onChangeText(val)}
-                                        disabled={!editable}
-                                        maxLength={2}
-                                    />
-                                </View>
-                                <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
-                                    <View style={{width: '48%'}}>
-                                        <Text>Net Amount</Text>
-                                        <Text style={{fontFamily: 'Amalee', marginBottom: 8}}>ශුද්ධ මුදල</Text>
-                                        <Input
-                                            containerStyle={{...styles.inputContainerStyle, width: '100%'}}
-                                            inputContainerStyle={{borderBottomWidth: 0}}
-                                            placeholder='Net Amount'
-                                            value={`Rs. ${netAmount ? netAmount : 0}`}
-                                            disabled={true}
-                                        />
-                                    </View>
-                                    <View style={{width: '48%'}}>
-                                        <Text>Pay Amount</Text>
-                                        <Text style={{fontFamily: 'Amalee', marginBottom: 8}}>ගෙවන මුදල</Text>
-                                        <Input
-                                            containerStyle={{...styles.inputContainerStyle, width: '100%'}}
-                                            inputContainerStyle={{borderBottomWidth: 0}}
-                                            placeholder='Pay Amount'
-                                            keyboardType='decimal-pad'
-                                            value={payAmount}
-                                            onChangeText={val => setPayAmount(val)}
-                                            disabled={!editable}
-                                        />
-                                    </View>
-                                </View>
+                                )}
                                 <Button
                                     title="Save | සුරකින්න"
                                     containerStyle={styles.buttonContainerStyle}
@@ -748,7 +757,11 @@ const HomeBase = ({navigation}) => {
                 title={"Do you want to logout?"}
                 onCancelPressed={() => {
                     setShowAlert2(false)
-                    AsyncStorage.clear();
+                    AsyncStorage.removeItem(StorageStrings.USER_ID);
+                    AsyncStorage.removeItem(StorageStrings.ROLE);
+                    AsyncStorage.removeItem(StorageStrings.REFRESH_TOKEN);
+                    AsyncStorage.removeItem(StorageStrings.ACCESS_TOKEN);
+                    AsyncStorage.removeItem(StorageStrings.LOGGED);
                     navigation.dispatch(
                         CommonActions.reset({
                             index: 1,
