@@ -249,7 +249,8 @@ const InvoiceBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '45%', backgroundColor: Constants.COLORS.BLACK}}
+                            style={{width: '45%',color:Constants.COLORS.BLACK}}
+                            color={'red'}
                             mode='dropdown'
                             selectedValue={searchType}
                             dropdownIconColor={Constants.COLORS.BLACK}
