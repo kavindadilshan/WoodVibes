@@ -32,7 +32,7 @@ const PayList = ({navigation, route}) => {
         await InvoiceServices.getInvoicePaymentDetails(invoiceId)
             .then(response => {
                 if (response){
-                    setPayList(response.paymentDetails);
+                    setPayList(response.paymentDetails!==null?response.paymentDetails:[]);
                     setTotalAmount(response.totalAmount.toFixed(2));
                     setPayableAmount(response.payableAmount.toFixed(2));
                     setStatus(response.status)
@@ -172,50 +172,53 @@ const PayList = ({navigation, route}) => {
                         onPress={() => payInvoiceHandler()}
                     />
 
-                    <Card containerStyle={styles.listCard}>
-                        <View>
-                            <View style={styles.listItemHeader}>
-                                <Card.Title style={{fontSize: 18, color: Constants.COLORS.PRIMARY_COLOR}}>Payment
-                                    Records |
-                                    ගෙවීම් වාර්තා</Card.Title>
-                                <Divider style={{marginVertical: 5}}/>
-                                <View style={styles.listItemHeaderItem}>
-                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Amount (Rs.)</Text>
-                                    <Text
-                                        style={[styles.listItemHeaderItemTitle, {width: '50%'}]}>Payment Date</Text>
-                                    <View style={{width: '10%'}}></View>
+                    {payList.length!==0&&(
+                        <Card containerStyle={styles.listCard}>
+                            <View>
+                                <View style={styles.listItemHeader}>
+                                    <Card.Title style={{fontSize: 18, color: Constants.COLORS.PRIMARY_COLOR}}>Payment
+                                        Records |
+                                        ගෙවීම් වාර්තා</Card.Title>
+                                    <Divider style={{marginVertical: 5}}/>
+                                    <View style={styles.listItemHeaderItem}>
+                                        <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Amount (Rs.)</Text>
+                                        <Text
+                                            style={[styles.listItemHeaderItemTitle, {width: '50%'}]}>Payment Date</Text>
+                                        <View style={{width: '10%'}}></View>
+                                    </View>
+                                </View>
+                                <View style={styles.listItemBody}>
+                                    {payList.map((items, i) => (
+                                        <View style={styles.listItemBodyItem} key={i}>
+                                            <Text
+                                                style={[styles.listItemBodyItemText, {width: '30%'}]}>{items.amount.toFixed(2)}</Text>
+                                            <Text
+                                                style={[styles.listItemBodyItemText, {width: '50%'}]}>{items.paymentDate}</Text>
+                                            <View style={{
+                                                width: '10%',
+                                                justifyContent: 'center',
+                                                alignItems: 'center'
+                                            }}>
+                                                <IconI
+                                                    name='close-circle-outline'
+                                                    size={25}
+                                                    style={styles.listItemCloseIcon}
+                                                    color={Constants.COLORS.RED}
+                                                    onPress={() => {
+                                                        setSelectedPayId(items.id);
+                                                        setShowAlert(true)
+                                                    }}
+                                                />
+                                            </View>
+                                        </View>
+                                    ))}
+
                                 </View>
                             </View>
-                            <View style={styles.listItemBody}>
-                                {payList.map((items, i) => (
-                                    <View style={styles.listItemBodyItem} key={i}>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{items.amount.toFixed(2)}</Text>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '50%'}]}>{items.paymentDate}</Text>
-                                        <View style={{
-                                            width: '10%',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}>
-                                            <IconI
-                                                name='close-circle-outline'
-                                                size={25}
-                                                style={styles.listItemCloseIcon}
-                                                color={Constants.COLORS.RED}
-                                                onPress={() => {
-                                                    setSelectedPayId(items.id);
-                                                    setShowAlert(true)
-                                                }}
-                                            />
-                                        </View>
-                                    </View>
-                                ))}
 
-                            </View>
-                        </View>
+                        </Card>
+                    )}
 
-                    </Card>
                 </Card>
             </ScrollView>
             <Loading isVisible={loading}/>
