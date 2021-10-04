@@ -36,3 +36,16 @@ export async function operatorInvoice(data,body){
     apiObject.body = body;
     return await ApiService.callApi(apiObject);
 }
+
+export async function deleteOperator(id){
+    const apiObject = {};
+    apiObject.method = 'DELETE';
+    apiObject.authentication = true;
+    apiObject.isBasicAuth = false;
+    apiObject.urlencoded = false;
+    apiObject.endpoint = `api/user/delete-operator/${id}`;
+    apiObject.multipart = false;
+    apiObject.body = null;
+    apiObject.isRefreshToken=false;
+    return await ApiService.callApi(apiObject);
+}

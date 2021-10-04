@@ -17,6 +17,7 @@ import TextInput from "../../components/textInput";
 import Icon from "react-native-vector-icons/Ionicons";
 import gif from '../../resources/gif/loading.gif';
 import {Picker} from "@react-native-picker/picker";
+import AlertMessage from "../../components/AlertMessage";
 
 let asDarkMode = Appearance.getColorScheme() === 'dark'
 
@@ -43,6 +44,8 @@ const OperatorBase = ({navigation}) => {
     const [searchOverlay, setSearchOverlay] = useState(false);
     const [searchType, setSearchType] = useState('');
     const [finished, setFinished] = useState(false);
+    const [showAlert,setShowAlert]=useState(false);
+    const [selectedOperatorId,setSelectedOperatorId]=useState();
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
@@ -81,9 +84,10 @@ const OperatorBase = ({navigation}) => {
 
                 response.users !== null && response.users.map(item => {
                     list.push({
+                        id:item.id,
                         name: item.name,
-                        username:item.username,
-                        email:item.email,
+                        username: item.username,
+                        email: item.email,
                         mobile: item.mobile,
                         identityNo: item.identityNo,
                     })
@@ -185,6 +189,29 @@ const OperatorBase = ({navigation}) => {
         await getAllOperatorList(0, []);
     }
 
+    async function deleteOperatorHandler(item) {
+        switch (item) {
+            case 'yes':
+                setShowAlert(false);
+                setLoading(true);
+                await OperatorsService.deleteOperator(selectedOperatorId)
+                    .then(async response => {
+                        commonFunc.notifyMessage('Invoice delete successfully', 1);
+                        setCustomerList([]);
+                        await getAllOperatorList(0, []);
+                    })
+                    .catch(error => {
+                        commonFunc.notifyMessage('You connection was interrupted', 0);
+                    })
+                break;
+            case 'no':
+                setShowAlert(false);
+                break;
+            default:
+                break;
+        }
+    }
+
     return (
         <View style={styles.container}>
             <TabHeader title="Operators" rightComponent={headerRightBtn}/>
@@ -208,9 +235,29 @@ const OperatorBase = ({navigation}) => {
 
                 {customerList.map((items, i) => (
                     <Card containerStyle={styles.listCard} key={i}>
-                        <Card.Title style={styles.listCardTitle}>
-                            {items.name}
-                        </Card.Title>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: 5
+                        }}>
+                            <Card.Title style={styles.listCardTitle}>
+                                {items.name}
+                            </Card.Title>
+                            <Button
+                                title="Delete"
+                                onPress={() => {
+                                    setShowAlert(true);
+                                    setSelectedOperatorId(items.id)
+                                }}
+                                containerStyle={styles.addNewButtonContainerStyle}
+                                buttonStyle={{
+                                    ...styles.addNewButtonStyle,
+                                    backgroundColor: Constants.COLORS.PRIMARY_COLOR
+                                }}
+                                titleStyle={styles.addNewButtonTitleStyle}
+                            />
+                        </View>
                         <Card.Divider/>
                         <View style={styles.listCardItem}>
                             <View style={{flexDirection: 'column'}}>
@@ -226,7 +273,7 @@ const OperatorBase = ({navigation}) => {
                                 <Text style={{fontSize: 10}}> විද්යුත් තැපෑල </Text>
                             </View>
 
-                            <Text style={{...styles.listCardItemDesc,fontSize:14}}>{items.email}</Text>
+                            <Text style={{...styles.listCardItemDesc, fontSize: 14}}>{items.email}</Text>
                         </View>
                         <View style={styles.listCardItem}>
                             <View style={{flexDirection: 'column'}}>
@@ -399,6 +446,14 @@ const OperatorBase = ({navigation}) => {
                     />
                 </Card>
             </Overlay>
+            <AlertMessage
+                show={showAlert}
+                title={"Do you want to delete this record?"}
+                onCancelPressed={() => deleteOperatorHandler('yes')}
+                onConfirmPressed={() => deleteOperatorHandler('no')}
+                cancelText={'Yes'}
+                confirmText={'Not Now'}
+            />
             <Loading isVisible={loading}/>
         </View>
     );
@@ -408,7 +463,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
-        paddingBottom:10
+        paddingBottom: 10
     },
     addNewButtonContainerStyle: {
         height: 40,
