@@ -205,7 +205,7 @@ const ApproveBase = ({navigation}) => {
                                 <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
                             </View>
                             <View style={styles.listCardItem}>
-                                <View style={{flexDirection: 'column'}}>
+                                <View style={{flexDirection: 'column',marginTop:10}}>
                                     <Text style={styles.listCardItemHeader}>Invoice Date</Text>
                                     <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
                                 </View>
