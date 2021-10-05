@@ -39,7 +39,10 @@ const ApproveBase = ({navigation}) => {
 
     useEffect(() => {
         navigation.addListener('focus', async () => {
+            setPage(0);
+            setFinished(true);
             setLoading(true);
+            setMiniLoader(false);
             setInvoiceList([]);
             await getAllInvoiceList(0, [], true);
         });
@@ -199,7 +202,7 @@ const ApproveBase = ({navigation}) => {
                                     <Text style={styles.listCardItemHeader}>Total Amount</Text>
                                     <Text style={{fontSize: 10}}> මුළු මුදල </Text>
                                 </View>
-                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
+                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
                             </View>
                             <View style={styles.listCardItem}>
                                 <View style={{flexDirection: 'column'}}>

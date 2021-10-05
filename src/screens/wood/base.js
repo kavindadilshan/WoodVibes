@@ -133,15 +133,15 @@ const WoodBase = ({navigation}) => {
                                 <Text style={styles.listCardItemHeader}>cost </Text>
                                 <Text style={{fontSize: 10}}> පිරිවැය </Text>
                             </View>
-                            <Text style={styles.listCardItemDesc}>Rs.{item.cost}</Text>
+                            <Text style={styles.listCardItemDesc}>Rs.{item.cost.toFixed(2)}</Text>
                         </View>
-                        <View style={styles.listCardItem}>
-                            <View style={{flexDirection: 'column'}}>
-                                <Text style={styles.listCardItemHeader}>Unit </Text>
-                                <Text style={{fontSize: 10}}> ඒකකය </Text>
-                            </View>
-                            <Text style={styles.listCardItemDesc}>{item.unit}</Text>
-                        </View>
+                        {/*<View style={styles.listCardItem}>*/}
+                        {/*    <View style={{flexDirection: 'column'}}>*/}
+                        {/*        <Text style={styles.listCardItemHeader}>Unit </Text>*/}
+                        {/*        <Text style={{fontSize: 10}}> ඒකකය </Text>*/}
+                        {/*    </View>*/}
+                        {/*    <Text style={styles.listCardItemDesc}>{item.unit}</Text>*/}
+                        {/*</View>*/}
                     </Card>
                 ))}
                 <Overlay

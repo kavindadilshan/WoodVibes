@@ -159,27 +159,37 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                                     <Text style={styles.listItemHeaderTitle}>{items.woodType}</Text>
                                 </View>
                                 <Divider style={{marginVertical: 5}}/>
-                                <View style={styles.listItemHeaderItem}>
-                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Cubic Feet
-                                        (අඩි)</Text>
-                                    <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>ඒකක මිල</Text>
-                                    <Text
-                                        style={[styles.listItemHeaderItemTitle, {width: '40%'}]}>වටිනාකම (Rs.)</Text>
-                                </View>
-                            </View>
-
-                            {items.subList.map((item, j) => (
-                                <View style={styles.listItemBody} key={j}>
-                                    <View style={styles.listItemBodyItem}>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.cubicFeet}</Text>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '30%'}]}>{item.unitPrice.toFixed(2)}</Text>
-                                        <Text
-                                            style={[styles.listItemBodyItemText, {width: '40%'}]}>{(item.amount).toFixed(2)}</Text>
+                                <ScrollView horizontal={true}>
+                                    <View style={{flexDirection: 'column'}}>
+                                        <View style={{flexDirection: 'row'}}>
+                                            <Text
+                                                style={[styles.listItemHeaderItemTitle, {width: 75}]}>දිග</Text>
+                                            <Text
+                                                style={[styles.listItemHeaderItemTitle, {width: 75}]}>වට</Text>
+                                            <Text style={[styles.listItemHeaderItemTitle, {width: 130}]}>Cubic
+                                                ප්‍රමාණය</Text>
+                                            <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>ඒකක
+                                                මිල (Rs.)</Text>
+                                            <Text
+                                                style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම (Rs.)</Text>
+                                        </View>
+                                        {items.subList.map((item, j) => (
+                                            <View style={{flexDirection: 'row'}} key={j}>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: 75}]}>{item.length}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: 75}]}>{item.circumference}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: 130}]}>{item.cubicFeet}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: 150}]}>{item.unitPrice.toFixed(2)}</Text>
+                                                <Text
+                                                    style={[styles.listItemBodyItemText, {width: 150}]}>{(item.amount).toFixed(2)}</Text>
+                                            </View>
+                                        ))}
                                     </View>
-                                </View>
-                            ))}
+                                </ScrollView>
+                            </View>
 
                         </Card>
                     ))}

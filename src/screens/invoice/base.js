@@ -243,7 +243,7 @@ const InvoiceBase = ({navigation}) => {
                                     <Text style={styles.listCardItemHeader}>Total Amount</Text>
                                     <Text style={{fontSize: 10}}> මුළු මුදල </Text>
                                 </View>
-                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
+                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
                             </View>
                             <View style={styles.listCardItem}>
                                 <View style={{flexDirection: 'column', marginTop: 10}}>

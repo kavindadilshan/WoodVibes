@@ -79,9 +79,14 @@ const PayList = ({navigation, route}) => {
         setLoading(true)
         await InvoiceServices.invoicePay(invoiceId, data)
             .then(async response => {
-                setLoading(false)
-                commonFunc.notifyMessage('Payment record added successfully', 1);
-                await getPayList(invoiceId);
+                setPayAmount('');
+                setLoading(false);
+                if (response.success === undefined) {
+                    commonFunc.notifyMessage('Payment record added successfully', 1);
+                    await getPayList(invoiceId);
+                }else {
+                    commonFunc.notifyMessage('Amount exceeded', 0);
+                }
             })
             .catch(error => {
                 setLoading(false)
