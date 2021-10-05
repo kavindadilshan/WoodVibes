@@ -107,7 +107,9 @@ const HomeBase = ({navigation}) => {
             list.push({
                 woodMeasurementCostId: item.woodMeasurementCostId,
                 cubicFeet: Number(item.cubicQuantity),
-                amount: Number(item.totalAmount)
+                amount: Number(item.totalAmount),
+                length: Number(length),
+                circumference: Number(circumference),
             })
         })
 
@@ -124,6 +126,7 @@ const HomeBase = ({navigation}) => {
             invoiceDetails: list
         }
         setLoading(true)
+
         await InvoiceServices.saveInvoice(data)
             .then(res => {
                 commonFunc.notifyMessage('Invoice saved successfully!', 1);
