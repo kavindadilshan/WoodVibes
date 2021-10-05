@@ -40,6 +40,7 @@ const ApproveBase = ({navigation}) => {
     useEffect(() => {
         navigation.addListener('focus', async () => {
             setLoading(true);
+            setInvoiceList([]);
             await getAllInvoiceList(0, [], true);
         });
     }, [navigation])

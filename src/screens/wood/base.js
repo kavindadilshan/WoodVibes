@@ -24,6 +24,7 @@ const WoodBase = ({navigation}) => {
     useEffect(async () => {
         navigation.addListener('focus', async () => {
             setLoading(true)
+            setWoodTypeList([]);
             await getWoodTypeLists();
         });
     }, [navigation])
@@ -196,6 +197,8 @@ const WoodBase = ({navigation}) => {
                     cancelText={'Yes'}
                     confirmText={'Not Now'}
                 />
+                {woodTypeList.length === 0 && (
+                    <Text style={{textAlign: 'center', marginTop: '5%'}}>No Results found</Text>)}
             </ScrollView>
         </View>
     )

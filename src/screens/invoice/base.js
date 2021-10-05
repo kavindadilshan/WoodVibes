@@ -25,6 +25,7 @@ const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
         contentSize.height - paddingToBottom;
 };
 
+let userRole;
 const InvoiceBase = ({navigation}) => {
 
     const [invoiceList, setInvoiceList] = useState({});
@@ -36,22 +37,28 @@ const InvoiceBase = ({navigation}) => {
     const [miniLoader, setMiniLoader] = useState(false);
     const [searchOverlay, setSearchOverlay] = useState(false);
     const [searchType, setSearchType] = useState('');
-    const [finished, setFinished] = useState(false);
+    const [finished, setFinished] = useState(true);
     const [role, setRole] = useState();
 
     useEffect(() => {
         navigation.addListener('focus', async () => {
+            setInvoiceList([]);
+            setPage(0);
+            setFinished(true);
             setLoading(true);
+            setMiniLoader(false);
             setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
+            userRole = await AsyncStorage.getItem(StorageStrings.ROLE);
             await getAllInvoiceList(0, [], true);
         });
     }, [navigation])
 
     async function getAllInvoiceList(pageNo, isEmpty, first) {
+        console.log(pageNo)
         const data = {
             factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID),
             page: pageNo,
-            userId:await AsyncStorage.getItem(StorageStrings.USER_ID)
+            userId: await AsyncStorage.getItem(StorageStrings.USER_ID)
         }
 
         let body;
@@ -69,7 +76,37 @@ const InvoiceBase = ({navigation}) => {
             }
         }
 
-        role === 'ROLE_ADMIN' ? await InvoiceServices.getAllInvoice(data, first === undefined ? body : null) :
+        if (userRole === 'ROLE_ADMIN') {
+            await InvoiceServices.getAllInvoice(data, first === undefined ? body : null)
+                .then(response => {
+                    let list;
+                    if (isEmpty) {
+                        list = isEmpty
+                    } else {
+                        list = invoiceList;
+                    }
+
+                    response.invoiceList.map(item => {
+                        list.push({
+                            id: item.id,
+                            customerId: item.customerId,
+                            totalAmount: item.totalAmount,
+                            invoiceDate: item.invoiceDate,
+                            invoiceNo: item.invoiceNo
+                        })
+                    })
+                    setInvoiceList(list);
+                    if (pageNo + 1 >= response.pageCount) {
+                        setFinished(true);
+                    } else {
+                        setFinished(false);
+                    }
+
+                })
+                .catch(error => {
+                    commonFunc.notifyMessage('You connection was interrupted', 0);
+                })
+        } else {
             await OperatorService.operatorInvoice(data, first === undefined ? body : null)
                 .then(response => {
                     let list;
@@ -88,14 +125,17 @@ const InvoiceBase = ({navigation}) => {
                             invoiceNo: item.invoiceNo
                         })
                     })
+                    setInvoiceList(list);
                     if (pageNo + 1 >= response.pageCount) {
                         setFinished(true);
+                    } else {
+                        setFinished(false);
                     }
-                    setInvoiceList(list);
                 })
                 .catch(error => {
                     commonFunc.notifyMessage('You connection was interrupted', 0);
                 })
+        }
         setLoading(false);
         setMiniLoader(false);
     }
@@ -143,12 +183,12 @@ const InvoiceBase = ({navigation}) => {
         <View style={styles.container}>
             <TabHeader title='Invoice'/>
             <ScrollView
-                // contentContainerStyle={{paddingBottom: 10, justifyContent: 'center'}}
                 showsVerticalScrollIndicator={false}
                 onScroll={({nativeEvent}) => {
                     if (isCloseToBottom(nativeEvent)) {
                         if (!finished) {
-                            setMiniLoader(true)
+                            console.log('scroll')
+                            setMiniLoader(!miniLoader)
                             setPage(page + 1);
                             getAllInvoiceList(page + 1);
                         }
@@ -206,7 +246,7 @@ const InvoiceBase = ({navigation}) => {
                                 <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount}</Text>
                             </View>
                             <View style={styles.listCardItem}>
-                                <View style={{flexDirection: 'column'}}>
+                                <View style={{flexDirection: 'column', marginTop: 10}}>
                                     <Text style={styles.listCardItemHeader}>Invoice Date</Text>
                                     <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
                                 </View>
@@ -249,7 +289,7 @@ const InvoiceBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '45%',color:Constants.COLORS.BLACK}}
+                            style={{width: '45%', color: Constants.COLORS.BLACK}}
                             color={'red'}
                             mode='dropdown'
                             selectedValue={searchType}
@@ -305,6 +345,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
+        marginBottom: 5
     },
     addNewButtonContainerStyle: {
         height: 40,
@@ -330,7 +371,7 @@ const styles = StyleSheet.create({
     listCardItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 5,
+        marginBottom: 10,
         alignItems: 'center'
     },
     listCardItemHeader: {

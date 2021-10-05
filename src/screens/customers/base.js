@@ -45,8 +45,9 @@ const CustomerBase = ({navigation}) => {
     useEffect(async () => {
         navigation.addListener('focus', async () => {
             setLoading(true);
+            setMiniLoader(false);
             setPage(0);
-            setFinished(false);
+            setFinished(true);
             setCustomerList([])
             await getAllCustomersList(0, [], true);
         });
@@ -90,12 +91,14 @@ const CustomerBase = ({navigation}) => {
                 if (pageNo + 1 >= response.pageCount) {
                     setFinished(true);
                 }
+                setLoading(false);
+                setMiniLoader(false)
             })
             .catch(error => {
+                setLoading(false);
+                setMiniLoader(false)
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
-        setLoading(false);
-        setMiniLoader(false)
     }
 
     const toggleOverlay = () => {
@@ -178,7 +181,6 @@ const CustomerBase = ({navigation}) => {
         <View style={styles.container}>
             <TabHeader title="Customers" rightComponent={headerRightBtn}/>
             <ScrollView
-                // contentContainerStyle={{paddingBottom: 10}}
                 showsVerticalScrollIndicator={false}
                 onScroll={({nativeEvent}) => {
                     if (isCloseToBottom(nativeEvent)) {

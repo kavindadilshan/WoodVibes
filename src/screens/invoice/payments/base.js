@@ -17,10 +17,10 @@ const PayList = ({navigation, route}) => {
     const [loading, setLoading] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const [selectedPayId, setSelectedPayId] = useState();
-    const [invoiceId,setInvoiceId]=useState();
-    const [payAmount,setPayAmount]=useState();
-    const [status,setStatus]=useState('');
-    const [discount,setDiscount]=useState('');
+    const [invoiceId, setInvoiceId] = useState();
+    const [payAmount, setPayAmount] = useState();
+    const [status, setStatus] = useState('');
+    const [discount, setDiscount] = useState('');
 
     useEffect(async () => {
         setLoading(true);
@@ -31,8 +31,8 @@ const PayList = ({navigation, route}) => {
     async function getPayList(invoiceId) {
         await InvoiceServices.getInvoicePaymentDetails(invoiceId)
             .then(response => {
-                if (response){
-                    setPayList(response.paymentDetails!==null?response.paymentDetails:[]);
+                if (response) {
+                    setPayList(response.paymentDetails !== null ? response.paymentDetails : []);
                     setTotalAmount(response.totalAmount.toFixed(2));
                     setPayableAmount(response.payableAmount.toFixed(2));
                     setStatus(response.status)
@@ -67,17 +67,17 @@ const PayList = ({navigation, route}) => {
         }
     }
 
-    const payInvoiceHandler=async ()=>{
-        const data={
-            payAmount:payAmount
+    const payInvoiceHandler = async () => {
+        const data = {
+            payAmount: payAmount
         }
-        if (status!=='ACTIVE'){
-            Object.assign(data,{
-                discount:discount
+        if (status !== 'ACTIVE') {
+            Object.assign(data, {
+                discount: discount
             })
         }
         setLoading(true)
-        await InvoiceServices.invoicePay(invoiceId,data)
+        await InvoiceServices.invoicePay(invoiceId, data)
             .then(async response => {
                 setLoading(false)
                 commonFunc.notifyMessage('Payment record added successfully', 1);
@@ -89,8 +89,8 @@ const PayList = ({navigation, route}) => {
             })
     }
 
-    const onTextChange=(val)=>{
-        const discountedPrice=payableAmount-val;
+    const onTextChange = (val) => {
+        const discountedPrice = totalAmount - val;
         setPayableAmount(discountedPrice);
         setDiscount(val)
     }
@@ -116,6 +116,25 @@ const PayList = ({navigation, route}) => {
                             disabled={true}
                         />
                     </View>
+
+                    {status !== 'ACTIVE' && (
+                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                            <View>
+                                <Text>Discount</Text>
+                                <Text style={{fontFamily: 'Amalee'}}>වට්ටම්</Text>
+                            </View>
+                            <Input
+                                containerStyle={styles.inputContainerStyle}
+                                inputContainerStyle={{borderBottomWidth: 0}}
+                                textAlign={'right'}
+                                placeholder='Discount'
+                                keyboardType='decimal-pad'
+                                onChangeText={val => onTextChange(val)}
+                                value={discount}
+                            />
+                        </View>
+                    )}
+
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
                             <Text>Payable Amount</Text>
@@ -130,22 +149,7 @@ const PayList = ({navigation, route}) => {
                             disabled={true}
                         />
                     </View>
-                    {status!=='ACTIVE'&&(
-                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
-                            <View>
-                                <Text>Discount</Text>
-                                <Text style={{fontFamily: 'Amalee'}}>වට්ටම්</Text>
-                            </View>
-                            <Input
-                                containerStyle={styles.inputContainerStyle}
-                                inputContainerStyle={{borderBottomWidth: 0}}
-                                textAlign={'right'}
-                                placeholder='Discount'
-                                onChangeText={val => onTextChange(val)}
-                                value={discount}
-                            />
-                        </View>
-                    )}
+
 
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
@@ -172,7 +176,7 @@ const PayList = ({navigation, route}) => {
                         onPress={() => payInvoiceHandler()}
                     />
 
-                    {payList.length!==0&&(
+                    {payList.length !== 0 && (
                         <Card containerStyle={styles.listCard}>
                             <View>
                                 <View style={styles.listItemHeader}>
@@ -181,7 +185,8 @@ const PayList = ({navigation, route}) => {
                                         ගෙවීම් වාර්තා</Card.Title>
                                     <Divider style={{marginVertical: 5}}/>
                                     <View style={styles.listItemHeaderItem}>
-                                        <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Amount (Rs.)</Text>
+                                        <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>Amount
+                                            (Rs.)</Text>
                                         <Text
                                             style={[styles.listItemHeaderItemTitle, {width: '50%'}]}>Payment Date</Text>
                                         <View style={{width: '10%'}}></View>

@@ -526,7 +526,7 @@ const HomeBase = ({navigation}) => {
                                     <View>
                                         <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                                             <View>
-                                                <Text>Discount (%)</Text>
+                                                <Text>Discount</Text>
                                                 <Text style={{fontFamily: 'Amalee'}}>වට්ටම් </Text>
                                             </View>
                                             <Input
@@ -538,7 +538,7 @@ const HomeBase = ({navigation}) => {
                                                 keyboardType='decimal-pad'
                                                 onChangeText={val => onChangeText(val)}
                                                 disabled={!editable}
-                                                maxLength={2}
+                                                // maxLength={2}
                                             />
                                         </View>
                                         <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
