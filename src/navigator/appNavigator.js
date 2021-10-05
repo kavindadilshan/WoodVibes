@@ -16,6 +16,7 @@ import InvoiceDetailsBase from "../screens/invoice/details/base";
 import PayList from "../screens/invoice/payments/base";
 import OperatorScreen from "../screens/operators/base";
 import WoodScreen from "../screens/wood/base";
+import SampleScan from "../screens/sample";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import * as Constants from '../utils/constants';
@@ -104,6 +105,7 @@ const AppNavigator = () => {
                     headerShown: false
                 }}>
                 <>
+                    {/*<Stack.Screen name="Sample" component={SampleScan}/>*/}
                     <Stack.Screen name="Splash" component={SplashScreen}/>
                     <Stack.Screen name="Login" component={LoginScreen}/>
                     <Stack.Screen name="Register" component={RegisterScreen}/>
