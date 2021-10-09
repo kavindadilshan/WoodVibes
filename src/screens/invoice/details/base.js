@@ -22,6 +22,8 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [invoiceId, setInvoiceId] = useState();
     const [invoiceIdentityNum, setInvoiceIdentityNum] = useState();
     const [role, setRole] = useState();
+    const [discountAmount,setDiscountAmount]=useState('');
+    const [payableAmount,setPayableAmount]=useState('');
 
     useEffect(async () => {
         setLoading(true);
@@ -36,6 +38,8 @@ const InvoiceDetailsBase = ({navigation, route}) => {
             .then(response => {
                 setCustomerName(response.customerName);
                 setTotalAmount(response.totalAmount.toFixed(2));
+                setDiscountAmount(response.discount.toFixed(2));
+                setPayableAmount(response.toPaidAmount.toFixed(2));
                 groupBy(response.invoiceDetails);
             })
             .catch(error => {
@@ -130,13 +134,22 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                             <Text>Customer Name</Text>
                             <Text style={{fontFamily: 'Amalee'}}>පාරිභෝගිකයාගේ නම</Text>
                         </View>
-                        <Input
-                            containerStyle={styles.inputContainerStyle}
-                            inputContainerStyle={{borderBottomWidth: 0}}
-                            textAlign={'right'}
-                            value={customerName}
-                            disabled={true}
-                        />
+                        <View style={{backgroundColor:Constants.COLORS.WHITE,width:'45%',borderRadius:10}}>
+                            <ScrollView horizontal={true}
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={{alignItems:'center',paddingHorizontal:5}}
+                            >
+                                <Text style={{fontSize:17,color:'gray'}}>{customerName}</Text>
+                            </ScrollView>
+                        </View>
+
+                        {/*<Input*/}
+                        {/*    containerStyle={styles.inputContainerStyle}*/}
+                        {/*    inputContainerStyle={{borderBottomWidth: 0}}*/}
+                        {/*    textAlign={'right'}*/}
+                        {/*    value={customerName}*/}
+                        {/*    disabled={true}*/}
+                        {/*/>*/}
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
@@ -148,6 +161,34 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                             inputContainerStyle={{borderBottomWidth: 0}}
                             textAlign={'right'}
                             value={`Rs. ${totalAmount}`}
+                            disabled={true}
+                        />
+                    </View>
+
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Discount</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>වට්ටම</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            textAlign={'right'}
+                            value={`Rs. ${discountAmount}`}
+                            disabled={true}
+                        />
+                    </View>
+
+                    <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                        <View>
+                            <Text>Payable Amount</Text>
+                            <Text style={{fontFamily: 'Amalee'}}>ගෙවිය යුතු මුදල</Text>
+                        </View>
+                        <Input
+                            containerStyle={styles.inputContainerStyle}
+                            inputContainerStyle={{borderBottomWidth: 0}}
+                            textAlign={'right'}
+                            value={`Rs. ${payableAmount}`}
                             disabled={true}
                         />
                     </View>
