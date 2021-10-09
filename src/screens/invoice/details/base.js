@@ -134,22 +134,27 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                             <Text>Customer Name</Text>
                             <Text style={{fontFamily: 'Amalee'}}>පාරිභෝගිකයාගේ නම</Text>
                         </View>
-                        <View style={{backgroundColor:Constants.COLORS.WHITE,width:'45%',borderRadius:10}}>
-                            <ScrollView horizontal={true}
-                                        showsHorizontalScrollIndicator={false}
-                                        contentContainerStyle={{alignItems:'center',paddingHorizontal:5}}
-                            >
-                                <Text style={{fontSize:17,color:'gray'}}>{customerName}</Text>
-                            </ScrollView>
-                        </View>
+                        {customerName.length>10?(
+                            <View style={{backgroundColor:Constants.COLORS.WHITE,width:'45%',borderRadius:10}}>
+                                <ScrollView horizontal={true}
+                                            showsHorizontalScrollIndicator={false}
+                                            contentContainerStyle={{alignItems:'center',paddingHorizontal:5}}
+                                >
+                                    <Text style={{fontSize:17,color:'gray'}}>{customerName}</Text>
+                                </ScrollView>
+                            </View>
+                        ):(
+                            <Input
+                                containerStyle={styles.inputContainerStyle}
+                                inputContainerStyle={{borderBottomWidth: 0}}
+                                textAlign={'right'}
+                                value={customerName}
+                                disabled={true}
+                            />
+                        )}
 
-                        {/*<Input*/}
-                        {/*    containerStyle={styles.inputContainerStyle}*/}
-                        {/*    inputContainerStyle={{borderBottomWidth: 0}}*/}
-                        {/*    textAlign={'right'}*/}
-                        {/*    value={customerName}*/}
-                        {/*    disabled={true}*/}
-                        {/*/>*/}
+
+
                     </View>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <View>
