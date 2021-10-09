@@ -594,38 +594,54 @@ const HomeBase = ({navigation}) => {
                                                     List</Text>
                                             </View>
                                             <Divider style={{marginVertical: 5}}/>
-                                            <ScrollView horizontal={true}>
-                                                <View style={{flexDirection: 'column'}}>
-                                                    <View style={{flexDirection: 'row'}}>
-                                                        <Text
-                                                            style={[styles.listItemHeaderItemTitle, {width: 100}]}>දිග</Text>
-                                                        <Text
-                                                            style={[styles.listItemHeaderItemTitle, {width: 100}]}>වට</Text>
-                                                        <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>Cubic
-                                                            ප්‍රමාණය</Text>
-                                                        <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>ඒකක
-                                                            මිල</Text>
-                                                        <Text
-                                                            style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම</Text>
-                                                    </View>
+                                            {/*<ScrollView horizontal={true}>*/}
+                                            {/*    <View style={{flexDirection: 'column'}}>*/}
+                                            {/*        <View style={{flexDirection: 'row'}}>*/}
+                                            {/*            /!*<Text*!/*/}
+                                            {/*            /!*    style={[styles.listItemHeaderItemTitle, {width: 100}]}>දිග</Text>*!/*/}
+                                            {/*            /!*<Text*!/*/}
+                                            {/*            /!*    style={[styles.listItemHeaderItemTitle, {width: 100}]}>වට</Text>*!/*/}
+                                            {/*            <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>Cubic*/}
+                                            {/*                ප්‍රමාණය</Text>*/}
+                                            {/*            <Text style={[styles.listItemHeaderItemTitle, {width: 100}]}>ඒකක*/}
+                                            {/*                මිල</Text>*/}
+                                            {/*            <Text*/}
+                                            {/*                style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම</Text>*/}
+                                            {/*        </View>*/}
 
-                                                    {/*<View style={styles.listItemBody}>*/}
-                                                    <View style={{flexDirection: 'row'}}>
-                                                        <Text
-                                                            style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalLength}</Text>
-                                                        <Text
-                                                            style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalCircumference}</Text>
-                                                        <Text
-                                                            style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalCubic}</Text>
-                                                        <Text
-                                                            style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalUnits}</Text>
-                                                        <Text
-                                                            style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
-                                                    </View>
+                                            {/*        /!*<View style={styles.listItemBody}>*!/*/}
+                                            {/*        <View style={{flexDirection: 'row'}}>*/}
+                                            {/*            /!*<Text*!/*/}
+                                            {/*            /!*    style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalLength}</Text>*!/*/}
+                                            {/*            /!*<Text*!/*/}
+                                            {/*            /!*    style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalCircumference}</Text>*!/*/}
+                                            {/*            <Text*/}
+                                            {/*                style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalCubic}</Text>*/}
+                                            {/*            <Text*/}
+                                            {/*                style={[styles.listItemBodyItemText, {width: 100}]}>{tableTotalValues(items.subList).totalUnits}</Text>*/}
+                                            {/*            <Text*/}
+                                            {/*                style={[styles.listItemBodyItemText, {width: 150}]}>{tableTotalValues(items.subList).totalAmounts}</Text>*/}
+                                            {/*        </View>*/}
+                                            {/*    </View>*/}
+
+                                            {/*    /!*</View>*!/*/}
+                                            {/*</ScrollView>*/}
+
+                                            <View style={styles.listItemHeaderItem}>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic ප්‍රමාණය</Text>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>ඒකක මිල</Text>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>වටිනාකම</Text>
+                                            </View>
+                                            <View style={styles.listItemBody}>
+                                                <View style={styles.listItemBodyItem}>
+                                                    <Text
+                                                        style={[styles.listItemBodyItemText, {width: '35%'}]}>{tableTotalValues(items.subList).totalCubic}</Text>
+                                                    <Text
+                                                        style={[styles.listItemBodyItemText, {width: '30%'}]}>{tableTotalValues(items.subList).totalUnits}</Text>
+                                                    <Text
+                                                        style={[styles.listItemBodyItemText, {width: '35%'}]}>{tableTotalValues(items.subList).totalAmounts}</Text>
                                                 </View>
-
-                                                {/*</View>*/}
-                                            </ScrollView>
+                                            </View>
 
                                         </View>
                                     </View>
