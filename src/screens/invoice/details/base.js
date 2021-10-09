@@ -22,8 +22,8 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [invoiceId, setInvoiceId] = useState();
     const [invoiceIdentityNum, setInvoiceIdentityNum] = useState();
     const [role, setRole] = useState();
-    const [discountAmount,setDiscountAmount]=useState('');
-    const [payableAmount,setPayableAmount]=useState('');
+    const [discountAmount, setDiscountAmount] = useState('');
+    const [payableAmount, setPayableAmount] = useState('');
 
     useEffect(async () => {
         setLoading(true);
@@ -83,6 +83,22 @@ const InvoiceDetailsBase = ({navigation, route}) => {
         />
     );
 
+    const printInvoice = async () => {
+        setLoading(true);
+        await InvoiceServices.printBill(route.params.invoiceId)
+            .then(res => {
+                if (res.success) {
+                    alert(JSON.stringify(res))
+                } else {
+                    commonFunc.notifyMessage(res.message, res.status);
+                }
+            })
+            .catch(err => {
+                commonFunc.notifyMessage('You connection was interrupted', 0);
+            })
+        setLoading(false);
+    }
+
     return (
         <View style={styles.container}>
             <TabHeader title='Invoice Details' backButton={true} navigation={navigation}
@@ -134,16 +150,16 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                             <Text>Customer Name</Text>
                             <Text style={{fontFamily: 'Amalee'}}>පාරිභෝගිකයාගේ නම</Text>
                         </View>
-                        {customerName.length>10?(
-                            <View style={{backgroundColor:Constants.COLORS.WHITE,width:'45%',borderRadius:10}}>
+                        {customerName.length > 10 ? (
+                            <View style={{backgroundColor: Constants.COLORS.WHITE, width: '45%', borderRadius: 10}}>
                                 <ScrollView horizontal={true}
                                             showsHorizontalScrollIndicator={false}
-                                            contentContainerStyle={{alignItems:'center',paddingHorizontal:5}}
+                                            contentContainerStyle={{alignItems: 'center', paddingHorizontal: 5}}
                                 >
-                                    <Text style={{fontSize:17,color:'gray'}}>{customerName}</Text>
+                                    <Text style={{fontSize: 17, color: 'gray'}}>{customerName}</Text>
                                 </ScrollView>
                             </View>
-                        ):(
+                        ) : (
                             <Input
                                 containerStyle={styles.inputContainerStyle}
                                 inputContainerStyle={{borderBottomWidth: 0}}
@@ -152,7 +168,6 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                                 disabled={true}
                             />
                         )}
-
 
 
                     </View>
@@ -217,7 +232,8 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                                             <Text style={[styles.listItemHeaderItemTitle, {width: 150}]}>ඒකක
                                                 මිල (Rs.)</Text>
                                             <Text
-                                                style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම (Rs.)</Text>
+                                                style={[styles.listItemHeaderItemTitle, {width: 150}]}>වටිනාකම
+                                                (Rs.)</Text>
                                         </View>
                                         {items.subList.map((item, j) => (
                                             <View style={{flexDirection: 'row'}} key={j}>
@@ -242,6 +258,19 @@ const InvoiceDetailsBase = ({navigation, route}) => {
 
 
                 </Card>
+
+                <View style={{width: '100%', height: 100}}>
+                    <View style={{width: 100, justifyContent: 'center', right: 15, position: 'absolute', top: 20}}>
+                        <Button
+                            title="Print"
+                            onPress={() => printInvoice()}
+                            containerStyle={styles.addNewButtonContainerStyle}
+                            buttonStyle={{...styles.addNewButtonStyle, backgroundColor: Constants.COLORS.PRIMARY_COLOR}}
+                            titleStyle={styles.addNewButtonTitleStyle}
+                        />
+                    </View>
+                </View>
+
 
             </ScrollView>
             <Loading isVisible={loading}/>
