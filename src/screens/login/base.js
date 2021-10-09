@@ -29,7 +29,7 @@ const LoginBase = ({navigation}) => {
     const [factoryList, setFactoryList] = useState([]);
     const [selectedFactoryList, setSelectedFactoryList] = useState([]);
     const [selectedFactoryId, setSelectedFactoryId] = useState('');
-    const [dropDownVisible,setDropDownVisible]=useState(true);
+    const [dropDownVisible, setDropDownVisible] = useState(true);
 
 
     useEffect(async () => {
@@ -45,7 +45,7 @@ const LoginBase = ({navigation}) => {
         factoryServices.getAllFactories()
             .then(res => {
                 const list = [];
-                for (let i = 0; i < [res].length; i++) {
+                for (let i = 0; i < Object.keys(res).length - 2; i++) {
                     list.push({
                         id: res[i].factoryId,
                         name: res[i].factoryName
@@ -103,7 +103,7 @@ const LoginBase = ({navigation}) => {
                     await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
                     await AsyncStorage.setItem(StorageStrings.FACTORYID, response.factoryId.toString());
                     await AsyncStorage.setItem(StorageStrings.ROLE, response.role);
-                    await AsyncStorage.setItem(StorageStrings.USER_ID,response.userId.toString())
+                    await AsyncStorage.setItem(StorageStrings.USER_ID, response.userId.toString())
                     navigation.dispatch(
                         CommonActions.reset({
                             index: 1,
