@@ -138,12 +138,12 @@ const CustomerBase = ({navigation}) => {
             .then(async res => {
                 console.log(res)
                 setVisible(false);
-                if (res.success === undefined) {
+                if (res.success) {
                     await getAllCustomersList(0, []);
                     commonFunc.notifyMessage("Customer has been successfully created!", 1);
                 } else {
                     setLoading(false);
-                    commonFunc.notifyMessage("duplicate entry", 0);
+                    commonFunc.notifyMessage(res.message, res.status);
                 }
             })
             .catch(error => {
