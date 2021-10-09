@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View,Appearance} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Appearance} from 'react-native';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 import IconI from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,7 +19,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import gif from '../../resources/gif/loading.gif';
 import {Picker} from "@react-native-picker/picker";
 
-let asDarkMode= Appearance.getColorScheme()==='dark'
+let asDarkMode = Appearance.getColorScheme() === 'dark'
 
 const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 0;
@@ -71,28 +71,36 @@ const CustomerBase = ({navigation}) => {
 
         await CustomerServices.getAllCustomers(data, first === undefined ? body : null)
             .then(response => {
-                let list;
-                if (isEmpty) {
-                    list = isEmpty
+                if (response.success) {
+                    let list;
+                    if (isEmpty) {
+                        list = isEmpty
+                    } else {
+                        list = customerList;
+                    }
+
+                    response.customers.map(item => {
+                        list.push({
+                            name: item.name,
+                            mobile: item.mobile,
+                            identityNo: item.identityNo,
+                            orderCount: item.orderCount,
+                            lastOrderDate: item.lastOrderDate
+                        })
+                    })
+                    setCustomerList(list);
+                    if (pageNo + 1 >= response.pageCount) {
+                        setFinished(true);
+                    }
+                    setLoading(false);
+                    setMiniLoader(false)
                 } else {
-                    list = customerList;
+                    setLoading(false);
+                    setMiniLoader(false);
+                    commonFunc.notifyMessage(response.message, response.status);
                 }
 
-                response.customers.map(item => {
-                    list.push({
-                        name: item.name,
-                        mobile: item.mobile,
-                        identityNo: item.identityNo,
-                        orderCount: item.orderCount,
-                        lastOrderDate: item.lastOrderDate
-                    })
-                })
-                setCustomerList(list);
-                if (pageNo + 1 >= response.pageCount) {
-                    setFinished(true);
-                }
-                setLoading(false);
-                setMiniLoader(false)
+
             })
             .catch(error => {
                 setLoading(false);
@@ -320,7 +328,7 @@ const CustomerBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '45%',color:Constants.COLORS.BLACK}}
+                            style={{width: '45%', color: Constants.COLORS.BLACK}}
                             color={'red'}
                             mode='dropdown'
                             selectedValue={searchType}
@@ -328,9 +336,9 @@ const CustomerBase = ({navigation}) => {
                             onValueChange={(itemValue, itemIndex) => {
                                 setSearchType(itemValue)
                             }}>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Select Type'} value={''}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'NIC'} value={'nic'}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Name'} value={'name'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Select Type'} value={''}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'NIC'} value={'nic'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Name'} value={'name'}/>
                         </Picker>
                         <Input
                             containerStyle={styles.inputContainerStyle}

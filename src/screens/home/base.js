@@ -115,7 +115,7 @@ const HomeBase = ({navigation}) => {
 
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
         const data = {
-            role:await AsyncStorage.getItem(StorageStrings.ROLE),
+            role: await AsyncStorage.getItem(StorageStrings.ROLE),
             userId: await AsyncStorage.getItem(StorageStrings.USER_ID),
             customerId: selectedCustomerId,
             factoryId: Number(factoryId),
@@ -129,17 +129,22 @@ const HomeBase = ({navigation}) => {
 
         await InvoiceServices.saveInvoice(data)
             .then(res => {
-                commonFunc.notifyMessage('Invoice saved successfully!', 1);
-                setGroupList([]);
-                setTotalAmount(null);
-                setDiscount('');
-                setNetAmount(null);
-                setPayAmount('');
-                setLength('');
-                setCircumference('');
-                setAddingList([]);
-                setSelectedCustomerList([]);
-                setSelectedWoodTypeList([]);
+                if (res.success) {
+                    commonFunc.notifyMessage('Invoice saved successfully!', 1);
+                    setGroupList([]);
+                    setTotalAmount(null);
+                    setDiscount('');
+                    setNetAmount(null);
+                    setPayAmount('');
+                    setLength('');
+                    setCircumference('');
+                    setAddingList([]);
+                    setSelectedCustomerList([]);
+                    setSelectedWoodTypeList([]);
+                } else {
+                    commonFunc.notifyMessage(res.message, res.status);
+                }
+
             })
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -164,6 +169,8 @@ const HomeBase = ({navigation}) => {
                 setTotalAmount(totalValue.toString());
                 setNetAmount(totalValue.toString());
                 setEditable(true);
+                setDiscount('');
+                setPayAmount('');
                 if (role !== 'ROLE_ADMIN') {
                     setPayAmount(0)
                 }
@@ -304,12 +311,18 @@ const HomeBase = ({navigation}) => {
                 }
                 await WoodServices.editCostById(data)
                     .then(async response => {
-                        setWoodTypeList([])
-                        setSelectedWoodTypeList({})
-                        setLoading(false);
-                        commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
-                        setSelectedWoodCost(Number(newCost));
-                        await getWoodTypeLists();
+                        if (response.success) {
+                            setWoodTypeList([])
+                            setSelectedWoodTypeList({})
+                            setLoading(false);
+                            commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
+                            setSelectedWoodCost(Number(newCost));
+                            await getWoodTypeLists();
+                        } else {
+                            setLoading(false);
+                            commonFunc.notifyMessage(response.message, response.status);
+                        }
+
                     })
                     .catch(error => {
                         setLoading(false);
@@ -628,9 +641,12 @@ const HomeBase = ({navigation}) => {
                                             {/*</ScrollView>*/}
 
                                             <View style={styles.listItemHeaderItem}>
-                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic ප්‍රමාණය</Text>
-                                                <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>ඒකක මිල</Text>
-                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>වටිනාකම</Text>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>Cubic
+                                                    ප්‍රමාණය</Text>
+                                                <Text style={[styles.listItemHeaderItemTitle, {width: '30%'}]}>ඒකක
+                                                    මිල</Text>
+                                                <Text
+                                                    style={[styles.listItemHeaderItemTitle, {width: '35%'}]}>වටිනාකම</Text>
                                             </View>
                                             <View style={styles.listItemBody}>
                                                 <View style={styles.listItemBodyItem}>

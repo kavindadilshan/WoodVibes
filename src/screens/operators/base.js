@@ -44,8 +44,8 @@ const OperatorBase = ({navigation}) => {
     const [searchOverlay, setSearchOverlay] = useState(false);
     const [searchType, setSearchType] = useState('');
     const [finished, setFinished] = useState(false);
-    const [showAlert,setShowAlert]=useState(false);
-    const [selectedOperatorId,setSelectedOperatorId]=useState();
+    const [showAlert, setShowAlert] = useState(false);
+    const [selectedOperatorId, setSelectedOperatorId] = useState();
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
@@ -84,7 +84,7 @@ const OperatorBase = ({navigation}) => {
 
                 response.users !== null && response.users.map(item => {
                     list.push({
-                        id:item.id,
+                        id: item.id,
                         name: item.name,
                         username: item.username,
                         email: item.email,
@@ -106,6 +106,8 @@ const OperatorBase = ({navigation}) => {
 
     const toggleOverlay = () => {
         setName('');
+        setUsername('');
+        setPassword('');
         setIdNumber('');
         setMobile('');
         setVisible(false);
@@ -119,8 +121,6 @@ const OperatorBase = ({navigation}) => {
             commonFunc.notifyMessage('Please Enter Name', 2);
         } else if (!Validation.textFieldValidator(username.trim(), 1)) {
             commonFunc.notifyMessage('Please Enter Username', 2);
-        } else if (!Validation.emailValidator(email.trim())) {
-            commonFunc.notifyMessage('Please Enter Valid Email', 2);
         } else if (!Validation.textFieldValidator(password.trim(), 1)) {
             commonFunc.notifyMessage('Please Enter Password', 2);
         } else if (!Validation.nicValidator(idNumber.trim())) {
@@ -150,12 +150,12 @@ const OperatorBase = ({navigation}) => {
             .then(async res => {
                 console.log(res)
                 setVisible(false);
-                if (res.success === undefined) {
+                if (res.success) {
                     await getAllOperatorList(0, []);
                     commonFunc.notifyMessage("Operator has been successfully created!", 1);
                 } else {
                     setLoading(false);
-                    commonFunc.notifyMessage("duplicate entry", 0);
+                    commonFunc.notifyMessage('', res.status, res.message);
                 }
             })
             .catch(error => {
@@ -170,8 +170,12 @@ const OperatorBase = ({navigation}) => {
             onPress={() => {
                 setVisible(true);
                 setName('');
+                setUsername('');
+                setPassword('');
                 setIdNumber('');
                 setMobile('');
+                setSearchKey('');
+                setSearchType('');
             }}
             containerStyle={styles.addNewButtonContainerStyle}
             buttonStyle={styles.addNewButtonStyle}
@@ -195,12 +199,19 @@ const OperatorBase = ({navigation}) => {
                 setShowAlert(false);
                 setLoading(true);
                 await OperatorsService.deleteOperator(selectedOperatorId)
-                    .then(async response => {
-                        commonFunc.notifyMessage('Invoice delete successfully', 1);
-                        setCustomerList([]);
-                        await getAllOperatorList(0, []);
+                    .then(async res => {
+                        if (res.success) {
+                            commonFunc.notifyMessage('Invoice delete successfully', 1);
+                            setCustomerList([]);
+                            await getAllOperatorList(0, []);
+                        } else {
+                            setLoading(false);
+                            commonFunc.notifyMessage('', res.status, res.message);
+                        }
+
                     })
                     .catch(error => {
+                        setLoading(false);
                         commonFunc.notifyMessage('You connection was interrupted', 0);
                     })
                 break;

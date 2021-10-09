@@ -59,7 +59,7 @@ export const callApi = async (apiObject) => {
             }
         })
         .catch(async error => {
-
+            console.log(JSON.stringify(error.response.data))
             if (error !== undefined) {
                 if (error.response === undefined) {
                     result = await {
@@ -71,11 +71,11 @@ export const callApi = async (apiObject) => {
                 } else if (error.response.status === 401) {
 
                     if (apiObject.state === "renewToken") {
-                        result = await {success: false, status: 2, message: error.response.data.message};
+                        result = await {success: false, status: 2, message: error.response.data};
                         return;
                     }
                     if (apiObject.state === "login") {
-                        result = await {success: false, status: 0, message: error.response.data.message};
+                        result = await {success: false, status: 0, message: error.response.data};
                         return;
                     }
                     result = await renewTokenHandler(apiObject);
@@ -105,7 +105,7 @@ export const callApi = async (apiObject) => {
                     result = await {
                         success: false,
                         status: 0,
-                        message: error.response.data.message,
+                        message: error.response.data,
                         data: null,
                     }
                 } else {

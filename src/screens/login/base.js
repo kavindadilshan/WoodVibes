@@ -97,6 +97,7 @@ const LoginBase = ({navigation}) => {
         }
         await authService.loginUser(data)
             .then(async response => {
+                // console.log(JSON.stringify(response))
                 if (response.token) {
                     await AsyncStorage.setItem(StorageStrings.LOGGED, 'true');
                     await AsyncStorage.setItem(StorageStrings.ACCESS_TOKEN, response.token);
@@ -112,7 +113,7 @@ const LoginBase = ({navigation}) => {
                         })
                     );
                 } else {
-                    commonFunc.notifyMessage('Incorrect username or password', 0);
+                    commonFunc.notifyMessage(response.message, response.status);
                 }
             })
             .catch(error => {

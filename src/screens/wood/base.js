@@ -76,7 +76,7 @@ const WoodBase = ({navigation}) => {
                 setWoodCostPopupVisible(true)
             }}
             containerStyle={styles.addNewButtonContainerStyle}
-            buttonStyle={{...styles.addNewButtonStyle,backgroundColor:Constants.COLORS.DARK_GREEN}}
+            buttonStyle={{...styles.addNewButtonStyle, backgroundColor: Constants.COLORS.DARK_GREEN}}
             titleStyle={styles.addNewButtonTitleStyle}
         />
     );
@@ -89,6 +89,7 @@ const WoodBase = ({navigation}) => {
     async function editCost(item) {
         switch (item) {
             case 'yes':
+                setVisible(false);
                 setShowAlert(false);
                 setLoading(true);
                 const data = {
@@ -97,11 +98,16 @@ const WoodBase = ({navigation}) => {
                 }
                 await WoodServices.editCostById(data)
                     .then(async response => {
-                        setWoodTypeList([])
-                        setLoading(false);
-                        setVisible(false);
-                        commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
-                        await getWoodTypeLists();
+                        if (response.success) {
+                            setWoodTypeList([])
+                            setLoading(false);
+                            commonFunc.notifyMessage('Wood Cost Edit successfully', 1);
+                            await getWoodTypeLists();
+                        } else {
+                            setLoading(false);
+                            commonFunc.notifyMessage(response.message, response.status);
+                        }
+
                     })
                     .catch(error => {
                         setLoading(false);
@@ -166,6 +172,7 @@ const WoodBase = ({navigation}) => {
                                     setSelectedId(item.id);
                                     setOldCost(item.cost);
                                     setVisible(!visible);
+                                    setNewCost('');
                                 }}
                                 containerStyle={styles.addNewButtonContainerStyle}
                                 buttonStyle={styles.addNewButtonStyle}

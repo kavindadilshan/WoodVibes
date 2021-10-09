@@ -52,8 +52,12 @@ const PayList = ({navigation, route}) => {
                 setLoading(true);
                 await InvoiceServices.deletePayRecord(selectedPayId)
                     .then(async response => {
-                        commonFunc.notifyMessage('Payment record delete successfully', 1);
-                        await getPayList(invoiceId);
+                        if (response.success) {
+                            commonFunc.notifyMessage('Payment record delete successfully', 1);
+                            await getPayList(invoiceId);
+                        } else {
+                            commonFunc.notifyMessage(response.message, response.status);
+                        }
                     })
                     .catch(error => {
                         commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -81,11 +85,11 @@ const PayList = ({navigation, route}) => {
             .then(async response => {
                 setPayAmount('');
                 setLoading(false);
-                if (response.success === undefined) {
+                if (response.success) {
                     commonFunc.notifyMessage('Payment record added successfully', 1);
                     await getPayList(invoiceId);
-                }else {
-                    commonFunc.notifyMessage('Amount exceeded', 0);
+                } else {
+                    commonFunc.notifyMessage(response.message, response.status);
                 }
             })
             .catch(error => {

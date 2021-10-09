@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View,Appearance} from 'react-native';
+import {Image, ScrollView, StyleSheet, Text, View, Appearance} from 'react-native';
 import {Button, Card, Input, Overlay} from 'react-native-elements';
 
 import * as Constants from '../../utils/constants';
@@ -16,7 +16,7 @@ import gif from "../../resources/gif/loading.gif";
 
 import {Picker} from "@react-native-picker/picker";
 
-let asDarkMode= Appearance.getColorScheme()==='dark'
+let asDarkMode = Appearance.getColorScheme() === 'dark'
 
 const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 0;
@@ -71,26 +71,31 @@ const ApproveBase = ({navigation}) => {
 
         await InvoiceServices.getAllPendingInvoice(data, first === undefined ? body : null)
             .then(response => {
-                let list;
-                if (isEmpty) {
-                    list = isEmpty
+                if (response.success) {
+                    let list;
+                    if (isEmpty) {
+                        list = isEmpty
+                    } else {
+                        list = invoiceList;
+                    }
+
+                    response.invoiceList.map(item => {
+                        list.push({
+                            id: item.id,
+                            customerId: item.customerId,
+                            totalAmount: item.totalAmount,
+                            invoiceDate: item.invoiceDate,
+                            invoiceNo: item.invoiceNo
+                        })
+                    })
+                    if (pageNo + 1 >= response.pageCount) {
+                        setFinished(true);
+                    }
+                    setInvoiceList(list);
                 } else {
-                    list = invoiceList;
+                    commonFunc.notifyMessage(response.message, response.status);
                 }
 
-                response.invoiceList.map(item => {
-                    list.push({
-                        id: item.id,
-                        customerId: item.customerId,
-                        totalAmount: item.totalAmount,
-                        invoiceDate: item.invoiceDate,
-                        invoiceNo: item.invoiceNo
-                    })
-                })
-                if (pageNo + 1 >= response.pageCount) {
-                    setFinished(true);
-                }
-                setInvoiceList(list);
             })
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -106,11 +111,18 @@ const ApproveBase = ({navigation}) => {
                 setLoading(true);
                 await InvoiceServices.deleteInvoice(selectedInvoice)
                     .then(async response => {
-                        commonFunc.notifyMessage('Invoice delete successfully', 1);
-                        setInvoiceList([]);
-                        await getAllInvoiceList(0, []);
+                        if (response.success) {
+                            commonFunc.notifyMessage('Invoice delete successfully', 1);
+                            setInvoiceList([]);
+                            await getAllInvoiceList(0, []);
+                        } else {
+                            setLoading(false);
+                            commonFunc.notifyMessage(response.message, response.status);
+                        }
+
                     })
                     .catch(error => {
+                        setLoading(false);
                         commonFunc.notifyMessage('You connection was interrupted', 0);
                     })
                 break;
@@ -202,10 +214,11 @@ const ApproveBase = ({navigation}) => {
                                     <Text style={styles.listCardItemHeader}>Total Amount</Text>
                                     <Text style={{fontSize: 10}}> මුළු මුදල </Text>
                                 </View>
-                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
+                                <Text
+                                    style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
                             </View>
                             <View style={styles.listCardItem}>
-                                <View style={{flexDirection: 'column',marginTop:10}}>
+                                <View style={{flexDirection: 'column', marginTop: 10}}>
                                     <Text style={styles.listCardItemHeader}>Invoice Date</Text>
                                     <Text style={{fontSize: 10}}> අවසාන ඇණවුම </Text>
                                 </View>
@@ -248,7 +261,7 @@ const ApproveBase = ({navigation}) => {
                     <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                     <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                         <Picker
-                            style={{width: '45%',backgroundColor:Constants.COLORS.BLACK}}
+                            style={{width: '45%', backgroundColor: Constants.COLORS.BLACK}}
                             mode='dropdown'
                             selectedValue={searchType}
                             dropdownIconColor={Constants.COLORS.BLACK}
@@ -260,10 +273,10 @@ const ApproveBase = ({navigation}) => {
                                     setSearchKey('')
                                 }
                             }}>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Select Type'} value={''}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'NIC'} value={'nic'}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Name'} value={'name'}/>
-                            <Picker.Item color={asDarkMode?'white':'black'} label={'Invoice No'} value={'invoice'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Select Type'} value={''}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'NIC'} value={'nic'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Name'} value={'name'}/>
+                            <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Invoice No'} value={'invoice'}/>
                         </Picker>
                         <Input
                             containerStyle={styles.inputContainerStyle}
@@ -274,15 +287,15 @@ const ApproveBase = ({navigation}) => {
                                 if (searchType !== 'invoice') {
                                     setSearchKey(val)
                                 } else {
-                                    if (/^\d+$/.test(val.toString().slice(3))){
-                                        if (val.length<=2){
+                                    if (/^\d+$/.test(val.toString().slice(3))) {
+                                        if (val.length <= 2) {
                                             val = searchKey.replace(/^IN-+/, 'IN-');
                                         }
                                         setSearchKey(val)
                                     }
                                 }
                             }}
-                            keyboardType={searchType==='invoice'?'number-pad':'default'}
+                            keyboardType={searchType === 'invoice' ? 'number-pad' : 'default'}
                         />
                     </View>
                     <Button

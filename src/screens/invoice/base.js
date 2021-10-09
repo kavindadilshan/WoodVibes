@@ -79,28 +79,33 @@ const InvoiceBase = ({navigation}) => {
         if (userRole === 'ROLE_ADMIN') {
             await InvoiceServices.getAllInvoice(data, first === undefined ? body : null)
                 .then(response => {
-                    let list;
-                    if (isEmpty) {
-                        list = isEmpty
+                    if (response.success) {
+                        let list;
+                        if (isEmpty) {
+                            list = isEmpty
+                        } else {
+                            list = invoiceList;
+                        }
+
+                        response.invoiceList.map(item => {
+                            list.push({
+                                id: item.id,
+                                customerId: item.customerId,
+                                totalAmount: item.totalAmount,
+                                invoiceDate: item.invoiceDate,
+                                invoiceNo: item.invoiceNo
+                            })
+                        })
+                        setInvoiceList(list);
+                        if (pageNo + 1 >= response.pageCount) {
+                            setFinished(true);
+                        } else {
+                            setFinished(false);
+                        }
                     } else {
-                        list = invoiceList;
+                        commonFunc.notifyMessage(response.message, response.status);
                     }
 
-                    response.invoiceList.map(item => {
-                        list.push({
-                            id: item.id,
-                            customerId: item.customerId,
-                            totalAmount: item.totalAmount,
-                            invoiceDate: item.invoiceDate,
-                            invoiceNo: item.invoiceNo
-                        })
-                    })
-                    setInvoiceList(list);
-                    if (pageNo + 1 >= response.pageCount) {
-                        setFinished(true);
-                    } else {
-                        setFinished(false);
-                    }
 
                 })
                 .catch(error => {
@@ -109,28 +114,33 @@ const InvoiceBase = ({navigation}) => {
         } else {
             await OperatorService.operatorInvoice(data, first === undefined ? body : null)
                 .then(response => {
-                    let list;
-                    if (isEmpty) {
-                        list = isEmpty
+                    if (response.success) {
+                        let list;
+                        if (isEmpty) {
+                            list = isEmpty
+                        } else {
+                            list = invoiceList;
+                        }
+
+                        response.invoiceList.map(item => {
+                            list.push({
+                                id: item.id,
+                                customerId: item.customerId,
+                                totalAmount: item.totalAmount,
+                                invoiceDate: item.invoiceDate,
+                                invoiceNo: item.invoiceNo
+                            })
+                        })
+                        setInvoiceList(list);
+                        if (pageNo + 1 >= response.pageCount) {
+                            setFinished(true);
+                        } else {
+                            setFinished(false);
+                        }
                     } else {
-                        list = invoiceList;
+                        commonFunc.notifyMessage(response.message, response.status);
                     }
 
-                    response.invoiceList.map(item => {
-                        list.push({
-                            id: item.id,
-                            customerId: item.customerId,
-                            totalAmount: item.totalAmount,
-                            invoiceDate: item.invoiceDate,
-                            invoiceNo: item.invoiceNo
-                        })
-                    })
-                    setInvoiceList(list);
-                    if (pageNo + 1 >= response.pageCount) {
-                        setFinished(true);
-                    } else {
-                        setFinished(false);
-                    }
                 })
                 .catch(error => {
                     commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -147,11 +157,17 @@ const InvoiceBase = ({navigation}) => {
                 setLoading(true);
                 await InvoiceServices.deleteInvoice(selectedInvoice)
                     .then(async response => {
-                        commonFunc.notifyMessage('Invoice delete successfully', 1);
-                        setInvoiceList([]);
-                        await getAllInvoiceList(0, []);
+                        if (response.success) {
+                            commonFunc.notifyMessage('Invoice delete successfully', 1);
+                            setInvoiceList([]);
+                            await getAllInvoiceList(0, []);
+                        } else {
+                            setLoading(false);
+                            commonFunc.notifyMessage(response.message, response.status);
+                        }
                     })
                     .catch(error => {
+                        setLoading(false);
                         commonFunc.notifyMessage('You connection was interrupted', 0);
                     })
                 break;
@@ -243,7 +259,8 @@ const InvoiceBase = ({navigation}) => {
                                     <Text style={styles.listCardItemHeader}>Total Amount</Text>
                                     <Text style={{fontSize: 10}}> මුළු මුදල </Text>
                                 </View>
-                                <Text style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
+                                <Text
+                                    style={styles.listCardItemDesc}>Rs. {invoiceList[item].totalAmount.toFixed(2)}</Text>
                             </View>
                             <View style={styles.listCardItem}>
                                 <View style={{flexDirection: 'column', marginTop: 10}}>
