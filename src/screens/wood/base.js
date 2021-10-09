@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {View, StyleSheet, Text, ScrollView} from "react-native";
+import {View, StyleSheet, Text, ScrollView, Appearance} from "react-native";
 import TabHeader from "../../components/tabHeader";
 import {Button, Card, Input, Overlay} from "react-native-elements";
 import * as Constants from "../../utils/constants";
@@ -11,21 +11,30 @@ import * as commonFunc from "../../utils/commonFunc";
 import Loading from "../../components/loading";
 import AlertMessage from "../../components/AlertMessage";
 import * as InvoiceServices from "../../services/invoice";
+import {Picker} from "@react-native-picker/picker";
+import awaitAsyncGenerator from "@babel/runtime/helpers/esm/awaitAsyncGenerator";
+
+let asDarkMode = Appearance.getColorScheme() === 'dark'
 
 const WoodBase = ({navigation}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [visible,setVisible]=useState(false);
-    const [newCost,setNewCost]=useState('');
-    const [oldCost,setOldCost]=useState('');
-    const [showAlert,setShowAlert]=useState(false);
-    const [selectedId,setSelectedId]=useState();
+    const [visible, setVisible] = useState(false);
+    const [newCost, setNewCost] = useState('');
+    const [oldCost, setOldCost] = useState('');
+    const [showAlert, setShowAlert] = useState(false);
+    const [selectedId, setSelectedId] = useState();
+    const [woodCostPopupVisible, setWoodCostPopupVisible] = useState(false);
+    const [list, setList] = useState([]);
+    const [woodCost, setWoodCost] = useState('');
+    const [selectedWoodTypeId, setSelectedWoodTypeId] = useState('');
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
             setLoading(true)
             setWoodTypeList([]);
             await getWoodTypeLists();
+            await getAllWoodTypes();
         });
     }, [navigation])
 
@@ -50,17 +59,24 @@ const WoodBase = ({navigation}) => {
             })
     }
 
+    async function getAllWoodTypes() {
+        await WoodServices.getAllWoodType()
+            .then(response => {
+                setList(response.woodTypes)
+            })
+            .catch(error => {
+                commonFunc.notifyMessage('You connection was interrupted', 0);
+            })
+    }
+
     const headerRightBtn = (
         <Button
             title="Add New"
-            // onPress={() => {
-            //     setVisible(true);
-            //     setName('');
-            //     setIdNumber('');
-            //     setMobile('');
-            // }}
+            onPress={() => {
+                setWoodCostPopupVisible(true)
+            }}
             containerStyle={styles.addNewButtonContainerStyle}
-            buttonStyle={styles.addNewButtonStyle}
+            buttonStyle={{...styles.addNewButtonStyle,backgroundColor:Constants.COLORS.DARK_GREEN}}
             titleStyle={styles.addNewButtonTitleStyle}
         />
     );
@@ -100,10 +116,39 @@ const WoodBase = ({navigation}) => {
         }
     }
 
+    const woodCostSaveHandler = async () => {
+        setLoading(true);
+        setWoodCostPopupVisible(false);
+        const data = {
+            woodTypeId: selectedWoodTypeId,
+            cost: Number(woodCost),
+            unitsId: 1,
+            factoryId: await AsyncStorage.getItem(StorageStrings.FACTORYID)
+        }
+        await WoodServices.addWoodCost(data)
+            .then(res => {
+                if (res.success) {
+                    setWoodTypeList([]);
+                    getWoodTypeLists();
+                    commonFunc.notifyMessage('Wood Cost Saved successfully', 1);
+                } else {
+                    setLoading(false);
+                    commonFunc.notifyMessage(res.message, res.status);
+                }
+                setSelectedWoodTypeId('');
+                setWoodCost('');
+
+            })
+            .catch(err => {
+                setLoading(false);
+                commonFunc.notifyMessage('You connection was interrupted', 0);
+            })
+    }
+
     return (
         <View style={styles.container}>
             <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-                <TabHeader title="Wood Cost"/>
+                <TabHeader title="Wood Cost" rightComponent={headerRightBtn}/>
                 {woodTypeList.map((item, i) => (
                     <Card containerStyle={styles.listCard} key={i}>
                         <View style={{
@@ -188,6 +233,75 @@ const WoodBase = ({navigation}) => {
                         />
                     </Card>
                 </Overlay>
+
+                <Overlay
+                    isVisible={woodCostPopupVisible}
+                    overlayStyle={styles.overlay}
+                    onBackdropPress={() => {
+                        setWoodCostPopupVisible(false);
+                        setSelectedWoodTypeId('');
+                        setWoodCost('')
+                    }}>
+                    <Card containerStyle={styles.overlayCard}>
+                        <Card.Title style={{fontSize: 17}}>
+                            Add Wood Cost | දැව පිරිවැය එකතු කරන්න
+                        </Card.Title>
+                        <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                            <View>
+                                <Text>Wood type</Text>
+                                <Text style={{fontFamily: 'Amalee'}}>දැව වර්ගය</Text>
+                            </View>
+                            <View style={styles.inputContainerStyle}>
+                                <Picker
+                                    style={{width: '100%', color: Constants.COLORS.BLACK, top: -5}}
+                                    color={'red'}
+                                    mode='dropdown'
+                                    selectedValue={'searchType'}
+                                    dropdownIconColor={Constants.COLORS.BLACK}
+                                    onValueChange={(itemValue, itemIndex) => {
+                                        setSelectedWoodTypeId(itemValue)
+                                    }}
+                                >
+                                    <Picker.Item color={asDarkMode ? 'white' : 'black'} label={'Select Type'}
+                                                 value={''}/>
+                                    {list.map((item, i) => (
+                                        <Picker.Item
+                                            color={asDarkMode ? 'white' : 'black'}
+                                            label={item.name}
+                                            value={item.id}
+                                            key={i}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
+
+                        </View>
+                        <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
+                            <View>
+                                <Text>Cost</Text>
+                                <Text style={{fontFamily: 'Amalee'}}>පිරිවැය</Text>
+                            </View>
+                            <Input
+                                containerStyle={styles.inputContainerStyle}
+                                inputContainerStyle={{borderBottomWidth: 0}}
+                                placeholder="Enter here..."
+                                value={woodCost}
+                                keyboardType="decimal-pad"
+                                onChangeText={val => setWoodCost(val)}
+                            />
+                        </View>
+                        <Button
+                            title="Save | සුරකින්න"
+                            onPress={() => woodCostSaveHandler()}
+                            containerStyle={styles.buttonContainerStyle}
+                            buttonStyle={styles.buttonStyle}
+                            titleStyle={styles.buttonTitleStyle}
+                            disabled={selectedWoodTypeId === '' || woodCost === ''}
+                        />
+                    </Card>
+                </Overlay>
+
                 <Loading isVisible={loading}/>
                 <AlertMessage
                     show={showAlert}
@@ -208,7 +322,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Constants.COLORS.BACKGROUND_ASH,
-        paddingBottom:10
+        paddingBottom: 10
     },
     addNewButtonContainerStyle: {
         height: 40,

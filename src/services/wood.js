@@ -19,7 +19,7 @@ export async function addWoodCost(body){
     apiObject.authentication = true;
     apiObject.isBasicAuth = false;
     apiObject.urlencoded = false;
-    apiObject.endpoint = `wood-cost/add`;
+    apiObject.endpoint = `api/wood-cost/add`;
     apiObject.multipart = false;
     apiObject.body = body;
     apiObject.isRefreshToken=false;
