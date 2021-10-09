@@ -22,7 +22,7 @@ export const callApi = async (apiObject) => {
 
     headers = {
         'Content-Type': apiObject.urlencoded ? 'application/x-www-form-urlencoded' : apiObject.multipart ? 'multipart/form-data' : 'application/json',
-        'factory':await AsyncStorage.getItem(StorageStrings.FACTORYID)
+        'factory': await AsyncStorage.getItem(StorageStrings.FACTORYID)
     };
     if (apiObject.authentication) {
         let access_token = await AsyncStorage.getItem(StorageStrings.ACCESS_TOKEN);
@@ -44,15 +44,19 @@ export const callApi = async (apiObject) => {
 
     await axios[method](url, method !== 'get' && method !== 'delete' ? body : {headers: headers}, {headers: headers})
         .then(async response => {
+            let code = response.status;
             if (!response.data.success) {
-                let code = response.data.code;
                 if (code === 470 || code === 471) {
                     await commonFunc.clearLocalStorage();
                     //navigations
                 }
             }
-            // result = await {...response.data, status: response.data.success ? 1 : 0};
-            result = await {...response.data};
+
+            if (code === 200 || code === 201) {
+                result = await {...response.data, success: true, status: 1}
+            } else {
+                result = await {...response.data, success: false, status: 2}
+            }
         })
         .catch(async error => {
 
@@ -90,6 +94,13 @@ export const callApi = async (apiObject) => {
                         message: "Oops! Something went wrong.",
                         data: null,
                     };
+                } else if (error.response.status === 400) {
+                    result = await {
+                        success: false,
+                        status: 0,
+                        message: error.response.data,
+                        data: null
+                    }
                 } else if (error.response.data !== undefined) {
                     result = await {
                         success: false,
@@ -100,7 +111,7 @@ export const callApi = async (apiObject) => {
                 } else {
                     result = await {
                         success: false,
-                        status: 2,
+                        status: 0,
                         message: "Sorry, something went wrong.",
                         data: null,
                     };
@@ -108,7 +119,7 @@ export const callApi = async (apiObject) => {
             } else {
                 result = await {
                     success: false,
-                    status: 2,
+                    status: 0,
                     message: "Your connection was interrupted!",
                     data: null,
                 };
