@@ -24,12 +24,14 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [role, setRole] = useState();
     const [discountAmount, setDiscountAmount] = useState('');
     const [payableAmount, setPayableAmount] = useState('');
+    const [asApproved,setAsApproved]=useState(false);
 
     useEffect(async () => {
         setLoading(true);
         setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
         setInvoiceId(route.params.invoiceId);
-        setInvoiceIdentityNum(route.params.invoiceNo.toString())
+        setInvoiceIdentityNum(route.params.invoiceNo.toString());
+        setAsApproved(route.params.asApproved)
         await getInvoiceById(route.params.invoiceId)
     }, [])
 
@@ -259,17 +261,22 @@ const InvoiceDetailsBase = ({navigation, route}) => {
 
                 </Card>
 
-                <View style={{width: '100%', height: 100}}>
-                    <View style={{width: 100, justifyContent: 'center', right: 15, position: 'absolute', top: 20}}>
-                        <Button
-                            title="Print"
-                            onPress={() => printInvoice()}
-                            containerStyle={styles.addNewButtonContainerStyle}
-                            buttonStyle={{...styles.addNewButtonStyle, backgroundColor: Constants.COLORS.PRIMARY_COLOR}}
-                            titleStyle={styles.addNewButtonTitleStyle}
-                        />
+                {role === 'ROLE_ADMIN' && asApproved && (
+                    <View style={{width: '100%', height: 100}}>
+                        <View style={{width: 100, justifyContent: 'center', right: 15, position: 'absolute', top: 20}}>
+                            <Button
+                                title="Print"
+                                onPress={() => printInvoice()}
+                                containerStyle={styles.addNewButtonContainerStyle}
+                                buttonStyle={{
+                                    ...styles.addNewButtonStyle,
+                                    backgroundColor: Constants.COLORS.PRIMARY_COLOR
+                                }}
+                                titleStyle={styles.addNewButtonTitleStyle}
+                            />
+                        </View>
                     </View>
-                </View>
+                )}
 
 
             </ScrollView>

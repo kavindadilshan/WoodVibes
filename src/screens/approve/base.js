@@ -195,7 +195,8 @@ const ApproveBase = ({navigation}) => {
                                         title="View"
                                         onPress={() => navigation.navigate('InvoiceDetails', {
                                             invoiceId: invoiceList[item].id,
-                                            invoiceNo: invoiceList[item].invoiceNo
+                                            invoiceNo: invoiceList[item].invoiceNo,
+                                            asApproved:false
                                         })}
                                         containerStyle={styles.addNewButtonContainerStyle}
                                         buttonStyle={{
