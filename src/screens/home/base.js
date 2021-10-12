@@ -21,6 +21,8 @@ import {
 } from "react-native-thermal-receipt-printer";
 import Connecting from '../../components/connecting';
 import {BluetoothEscposPrinter, BluetoothManager, BluetoothTscPrinter} from "tp-react-native-bluetooth-printer";
+import {connect} from "react-redux";
+import * as actionTypes from '../../store/actions';
 
 interface IBLEPrinter {
     device_name: string;
@@ -59,7 +61,7 @@ let options = {
     ],
 };
 
-const HomeBase = ({navigation}) => {
+const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,setDeviceConnectStatus,saveConnectedDeviceAddress,deviceAddress}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
     const [selectedLanguage, setSelectedLanguage] = useState();
     const [selectedWoodTypeId, setSelectedWoodTypeId] = useState('');
@@ -157,6 +159,7 @@ const HomeBase = ({navigation}) => {
                 }
                 console.log('Paired devices::::::::::::::::::::::::' + JSON.stringify(paired));
                 setPrinters(paired)
+                devicePairHandler(paired)
             },
             (err) => {
                 alert(err);
@@ -486,6 +489,8 @@ const HomeBase = ({navigation}) => {
                     setBoundAddress(printer.address)
                     setPrinterFindVisible(false);
                     setIsConnecting(false);
+                    setDeviceConnectStatus(true);
+                    saveConnectedDeviceAddress(printer.address)
                     commonFunc.notifyMessage('Printer Connect Successfully!', 1);
                     printBill();
                 },
@@ -1272,4 +1277,18 @@ const styles = StyleSheet.create({
     }
 });
 
-export default HomeBase;
+const mapStateToProps = (state) => ({
+    pairedDevices: state.user.pairedDevices,
+    asDeviceConnect: state.user.asDeviceConnect,
+    deviceAddress: state.user.deviceAddress,
+});
+
+const mapDispatchToProps = dispatch => {
+    return {
+        devicePairHandler: pairedDevices => dispatch(actionTypes.devicePairHandler(pairedDevices)),
+        setDeviceConnectStatus:asDeviceConnect=>dispatch(actionTypes.setDeviceConnectStatus(asDeviceConnect)),
+        saveConnectedDeviceAddress:deviceAddress=>dispatch(actionTypes.saveConnectedDeviceAddress(deviceAddress))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(HomeBase);

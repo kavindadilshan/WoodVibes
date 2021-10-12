@@ -1,1 +1,1 @@
-export {devicePairHandler} from './user';
+export {devicePairHandler,setDeviceConnectStatus,saveConnectedDeviceAddress} from './user';

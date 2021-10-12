@@ -1,8 +1,8 @@
 import React, {Component, useEffect, useState} from 'react';
-import {DeviceEventEmitter, ScrollView, StyleSheet, Text, View} from "react-native";
+import {DeviceEventEmitter, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import TabHeader from "../../../components/tabHeader";
 import * as Constants from "../../../utils/constants";
-import {Button, Card, Divider, Input} from "react-native-elements";
+import {Button, Card, Divider, Input, Overlay} from "react-native-elements";
 import {Picker} from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {StorageStrings} from "../../../utils/constants";
@@ -11,9 +11,12 @@ import * as commonFunc from "../../../utils/commonFunc";
 import IconI from "react-native-vector-icons/Ionicons";
 import * as Constance from "../../../utils/constants";
 import Loading from "../../../components/loading";
-import {BluetoothManager} from "tp-react-native-bluetooth-printer";
+import {BluetoothEscposPrinter, BluetoothManager} from "tp-react-native-bluetooth-printer";
+import * as actionTypes from "../../../store/actions";
+import {connect} from "react-redux";
+import Connecting from "../../../components/connecting";
 
-const InvoiceDetailsBase = ({navigation, route}) => {
+const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices, asDeviceConnect, setDeviceConnectStatus, saveConnectedDeviceAddress, deviceAddress}) => {
     const [woodType, setWoodType] = useState([]);
     const [selectedWoodDetails, setSelectedWoodDetails] = useState({});
     const [invoiceDetailsList, setInvoiceDetailsList] = useState([]);
@@ -25,14 +28,16 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [role, setRole] = useState();
     const [discountAmount, setDiscountAmount] = useState('');
     const [payableAmount, setPayableAmount] = useState('');
-    const [asApproved,setAsApproved]=useState(false);
+    const [asApproved, setAsApproved] = useState(false);
     const [printerFindVisible, setPrinterFindVisible] = useState(false);
     const [printObject, setPrintObject] = useState({});
     const [isConnecting, setIsConnecting] = useState(false);
     const [boundAddress, setBoundAddress] = useState();
     const [printers, setPrinters] = useState([]);
+    const [billPrintRequired, setBillPrintRequired] = useState(false)
 
     useEffect(async () => {
+        console.log(':::::::::::::::::::::::::::::::::::::::::::::::::::' + pairedDevices)
         setLoading(true);
         setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
         setInvoiceId(route.params.invoiceId);
@@ -98,10 +103,15 @@ const InvoiceDetailsBase = ({navigation, route}) => {
             .then(res => {
                 if (res.success) {
                     if (res.billPrintRequired) {
-                        if (boundAddress === undefined) {
+                        // if (boundAddress === undefined) {
+                        //     setPrinterFindVisible(true)
+                        // } else {
+                        //     printBill();
+                        // }
+                        if (asDeviceConnect){
+                            printBill()
+                        }else {
                             setPrinterFindVisible(true)
-                        } else {
-                            printBill();
                         }
                         setPrintObject(res.content);
                     }
@@ -114,6 +124,120 @@ const InvoiceDetailsBase = ({navigation, route}) => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
         setLoading(false);
+    }
+
+    const printBill=()=>{
+        BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
+        // await BluetoothEscposPrinter.setBlob(0);
+        BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r\n\r`, {
+            encoding: "GBK",
+            codepage: 0,
+            widthtimes: 1,
+            heigthtimes: 1,
+            fonttype: 1,
+        });
+        // await BluetoothEscposPrinter.setBlob(0);
+        BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
+            encoding: "GBK",
+            codepage: 0,
+            widthtimes: 0,
+            heigthtimes: 0,
+            fonttype: 1,
+        });
+
+        BluetoothEscposPrinter.printText(" \n\r", {});
+
+        BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+        BluetoothEscposPrinter.printText(`Invoice No: ${printObject.invoiceNo}\n\r`, {});
+        BluetoothEscposPrinter.printText(`Order Date: ${printObject.orderDate}\n\r`, {});
+        BluetoothEscposPrinter.printText(`Customer Name: ${printObject.customerName}\n\r`, {});
+        BluetoothEscposPrinter.printText(
+            "------------------------------------------------\n\r",
+            {}
+        );
+
+        let columnWidths = [7, 17, 12, 12];
+        // setTimeout(async () => {
+        {
+            printObject.invoiceBillRecordGroups.map((items, i) => {
+
+                BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r\n\r`, {});
+
+                BluetoothEscposPrinter.printColumn(columnWidths,
+                    [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "Circumference", "Cubic Feet", "Amount"], {}
+                )
+                // setTimeout(async () => {
+                {
+                    items.records.map( (item, j) => {
+
+                        BluetoothEscposPrinter.printColumn(columnWidths,
+                            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}`, `${item.circumference}`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
+                        )
+
+                    })
+                }
+                // }, 500)
+
+
+            })
+        }
+        // }, 1000)
+
+        setTimeout( () => {
+            BluetoothEscposPrinter.printText(
+                "------------------------------------------------\n\r\n\r",
+                {}
+            );
+
+            let bottomColumnWidth = [20, 20]
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid}`], {}
+            )
+
+            BluetoothEscposPrinter.printText(" \n\r", {});
+
+            BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
+            BluetoothEscposPrinter.printText("Thank you and come again!\n\r", {});
+            BluetoothEscposPrinter.printText("Software by @ CodeLogicIT Solutions\n\r", {});
+            BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r\n\r", {});
+            BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+        }, 5000)
+    }
+
+    const _connectPrinter=(printer)=>{
+        setIsConnecting(true);
+        BluetoothManager.connect(printer.address)
+            .then(
+                (s) => {
+                    console.log('Connect status:::::::::::::::::::::::::' + JSON.stringify(s))
+                    setBoundAddress(printer.address)
+                    setPrinterFindVisible(false);
+                    setIsConnecting(false);
+                    setDeviceConnectStatus(true);
+                    saveConnectedDeviceAddress(printer.address)
+                    commonFunc.notifyMessage('Printer Connect Successfully!', 1);
+                    printBill();
+                },
+                (e) => {
+                    console.log(e);
+                    setIsConnecting(false);
+                    commonFunc.notifyMessage('Printer Connect Failed!', 0)
+                }
+            );
     }
 
     return (
@@ -295,7 +419,40 @@ const InvoiceDetailsBase = ({navigation, route}) => {
 
 
             </ScrollView>
+            <Overlay
+                isVisible={printerFindVisible}
+                overlayStyle={styles.overlay}
+                onBackdropPress={() => setPrinterFindVisible(!printerFindVisible)}>
+                <Card containerStyle={styles.overlayCard}>
+                    <Card.Title style={{fontSize: 17}}>
+                        Select Printer | මුද්‍රණ යන්ත්‍රය තෝරගන්න
+                    </Card.Title>
+                    <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+
+                    {
+                        pairedDevices.map((printer, i) => (
+                            <View style={[styles.cardItemConatiner, {marginBottom: 10}]} key={i}>
+                                <TouchableOpacity style={styles.deviceContainer}
+                                                  onPress={() => _connectPrinter(printer)}>
+                                    <View style={{flexDirection: 'column',}}>
+                                        <View style={{flexDirection: 'row',}}>
+                                            <Text style={styles.deviceNameStyle}>Device Name:</Text>
+                                            <Text style={styles.deviceSubTitle}>{printer.name}</Text>
+                                        </View>
+                                        <View style={{flexDirection: 'row',}}>
+                                            <Text style={styles.deviceNameStyle}>Device Mac :</Text>
+                                            <Text style={styles.deviceSubTitle}>{printer.address}</Text>
+                                        </View>
+                                    </View>
+
+                                </TouchableOpacity>
+                            </View>
+                        ))
+                    }
+                </Card>
+            </Overlay>
             <Loading isVisible={loading}/>
+            <Connecting isVisible={isConnecting}/>
         </View>
 
     );
@@ -391,5 +548,49 @@ const styles = StyleSheet.create({
     addNewButtonTitleStyle: {
         fontSize: 16,
     },
+    deviceContainer: {
+        backgroundColor: Constants.COLORS.WHITE,
+        width: '100%',
+        paddingVertical: 10,
+        borderRadius: 10,
+        // justifyContent:'space-between',
+        paddingHorizontal: 5,
+        flex: 1
+    },
+    deviceNameStyle: {
+        color: Constants.COLORS.BLACK,
+        fontWeight: 'bold'
+    },
+    deviceSubTitle: {
+        marginLeft: 5,
+        color: Constants.COLORS.ICON_ASH
+    },
+    overlayCard: {
+        borderRadius: 10,
+        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
+        borderWidth: 0,
+        marginBottom: 15,
+    },
+    overlay: {
+        borderRadius: 10,
+        backgroundColor: 'transparent',
+        shadowColor: 'transparent',
+        borderWidth: 0,
+        width: '100%'
+    },
 })
-export default InvoiceDetailsBase;
+const mapStateToProps = (state) => ({
+    pairedDevices: state.user.pairedDevices,
+    asDeviceConnect: state.user.asDeviceConnect,
+    deviceAddress: state.user.deviceAddress,
+});
+
+const mapDispatchToProps = dispatch => {
+    return {
+        devicePairHandler: pairedDevices => dispatch(actionTypes.devicePairHandler(pairedDevices)),
+        setDeviceConnectStatus: asDeviceConnect => dispatch(actionTypes.setDeviceConnectStatus(asDeviceConnect)),
+        saveConnectedDeviceAddress: deviceAddress => dispatch(actionTypes.saveConnectedDeviceAddress(deviceAddress))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(InvoiceDetailsBase);
