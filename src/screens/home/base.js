@@ -996,11 +996,6 @@ const HomeBase = ({navigation}) => {
                         </View>
 
                     ))}
-
-                    <TouchableOpacity onPress={() => printBill()}>
-                        <Text>Print</Text>
-                    </TouchableOpacity>
-
                 </View>
 
             </ScrollView>

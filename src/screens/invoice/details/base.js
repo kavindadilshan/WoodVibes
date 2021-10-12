@@ -1,5 +1,5 @@
 import React, {Component, useEffect, useState} from 'react';
-import {ScrollView, StyleSheet, Text, View} from "react-native";
+import {DeviceEventEmitter, ScrollView, StyleSheet, Text, View} from "react-native";
 import TabHeader from "../../../components/tabHeader";
 import * as Constants from "../../../utils/constants";
 import {Button, Card, Divider, Input} from "react-native-elements";
@@ -11,6 +11,7 @@ import * as commonFunc from "../../../utils/commonFunc";
 import IconI from "react-native-vector-icons/Ionicons";
 import * as Constance from "../../../utils/constants";
 import Loading from "../../../components/loading";
+import {BluetoothManager} from "tp-react-native-bluetooth-printer";
 
 const InvoiceDetailsBase = ({navigation, route}) => {
     const [woodType, setWoodType] = useState([]);
@@ -25,6 +26,11 @@ const InvoiceDetailsBase = ({navigation, route}) => {
     const [discountAmount, setDiscountAmount] = useState('');
     const [payableAmount, setPayableAmount] = useState('');
     const [asApproved,setAsApproved]=useState(false);
+    const [printerFindVisible, setPrinterFindVisible] = useState(false);
+    const [printObject, setPrintObject] = useState({});
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [boundAddress, setBoundAddress] = useState();
+    const [printers, setPrinters] = useState([]);
 
     useEffect(async () => {
         setLoading(true);
@@ -33,6 +39,7 @@ const InvoiceDetailsBase = ({navigation, route}) => {
         setInvoiceIdentityNum(route.params.invoiceNo.toString());
         setAsApproved(route.params.asApproved)
         await getInvoiceById(route.params.invoiceId)
+
     }, [])
 
     async function getInvoiceById(invoiceId) {
@@ -90,7 +97,15 @@ const InvoiceDetailsBase = ({navigation, route}) => {
         await InvoiceServices.printBill(route.params.invoiceId)
             .then(res => {
                 if (res.success) {
-                    alert(JSON.stringify(res))
+                    if (res.billPrintRequired) {
+                        if (boundAddress === undefined) {
+                            setPrinterFindVisible(true)
+                        } else {
+                            printBill();
+                        }
+                        setPrintObject(res.content);
+                    }
+                    setBillPrintRequired(res.billPrintRequired);
                 } else {
                     commonFunc.notifyMessage(res.message, res.status);
                 }
