@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {DeviceEventEmitter, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 
@@ -14,8 +14,50 @@ import Loading from "../../components/loading";
 import AlertMessage from "../../components/AlertMessage";
 import DropDown from "../../components/dropDown";
 import {CommonActions} from "@react-navigation/native";
+import {
+    USBPrinter,
+    NetPrinter,
+    BLEPrinter,
+} from "react-native-thermal-receipt-printer";
+import Connecting from '../../components/connecting';
+import {BluetoothEscposPrinter, BluetoothManager, BluetoothTscPrinter} from "tp-react-native-bluetooth-printer";
+
+interface IBLEPrinter {
+    device_name: string;
+    inner_mac_address: string;
+}
 
 const screenHeight = Dimensions.get("screen").height;
+
+let options = {
+    width: 40,
+    height: 30,
+    gap: 20,
+    direction: BluetoothTscPrinter.DIRECTION.FORWARD,
+    reference: [0, 0],
+    tear: BluetoothTscPrinter.TEAR.ON,
+    sound: 0,
+    text: [
+        {
+            text: "කාවින්ද දිල්ශාන්",
+            x: 20,
+            y: 0,
+            fonttype: BluetoothTscPrinter.FONTTYPE.FONT_5,
+            rotation: BluetoothTscPrinter.ROTATION.ROTATION_0,
+            xscal: BluetoothTscPrinter.FONTMUL.MUL_1,
+            yscal: BluetoothTscPrinter.FONTMUL.MUL_1,
+        },
+        // {
+        //     text: "Second testing text",
+        //     x: 20,
+        //     y: 50,
+        //     fonttype: BluetoothTscPrinter.FONTTYPE.SIMPLIFIED_CHINESE,
+        //     rotation: BluetoothTscPrinter.ROTATION.ROTATION_0,
+        //     xscal: BluetoothTscPrinter.FONTMUL.MUL_1,
+        //     yscal: BluetoothTscPrinter.FONTMUL.MUL_1,
+        // },
+    ],
+};
 
 const HomeBase = ({navigation}) => {
     const [woodTypeList, setWoodTypeList] = useState([]);
@@ -46,6 +88,14 @@ const HomeBase = ({navigation}) => {
     const [selectedWoodTypeList, setSelectedWoodTypeList] = useState([]);
     const [selectedWoodCost, setSelectedWoodCost] = useState();
     const [role, setRole] = useState();
+    const [printers, setPrinters] = useState([]);
+    const [currentPrinter, setCurrentPrinter] = useState();
+    const [printerFindVisible, setPrinterFindVisible] = useState(false);
+    const [billPrintRequired, setBillPrintRequired] = useState(false);
+    const [printSize, setPrintSize] = useState(false);
+    const [printObject, setPrintObject] = useState({});
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [boundAddress, setBoundAddress] = useState();
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
@@ -53,7 +103,66 @@ const HomeBase = ({navigation}) => {
             await getAllCustomersList();
         });
         await getWoodTypeLists();
+
+        //scan ble devices
+        // BLEPrinter.init().then((res) => {
+        //     BLEPrinter.getDeviceList()
+        //         .then(res => {
+        //             console.log(res)
+        //             setPrinters(res)
+        //         })
+        //         .catch(err => {
+        //             console.log(err)
+        //         })
+        // });
+        bluetoothConfigurationHandler();
+
+        const subscription = DeviceEventEmitter.addListener(BluetoothManager.EVENT_DEVICE_ALREADY_PAIRED);
+        const subscription2 = DeviceEventEmitter.addListener(BluetoothManager.EVENT_DEVICE_FOUND);
+
+        return function cleanup() {
+            subscription.remove();
+            subscription2.remove();
+        }
+
+
     }, [navigation])
+
+    const bluetoothConfigurationHandler = () => {
+        BluetoothManager.isBluetoothEnabled().then(
+            (enabled) => {
+                console.log('isBLE Enabled::::::::::::::::::::::::' + enabled); // enabled ==> true /false
+                if (enabled) {
+                    bluetoothEnableFunc()
+                }
+            },
+            (err) => {
+                console.log(err);
+            }
+        );
+    }
+
+    const bluetoothEnableFunc = () => {
+        BluetoothManager.enableBluetooth().then(
+            (r) => {
+                let paired = [];
+                if (r && r.length > 0) {
+                    for (let i = 0; i < r.length; i++) {
+                        try {
+                            paired.push(JSON.parse(r[i])); // NEED TO PARSE THE DEVICE INFORMATION
+                        } catch (e) {
+                            console.log(e)
+                        }
+                    }
+                }
+                console.log('Paired devices::::::::::::::::::::::::' + JSON.stringify(paired));
+                setPrinters(paired)
+            },
+            (err) => {
+                alert(err);
+            }
+        );
+    }
 
     async function getWoodTypeLists() {
         const factoryId = await AsyncStorage.getItem(StorageStrings.FACTORYID);
@@ -130,6 +239,16 @@ const HomeBase = ({navigation}) => {
         await InvoiceServices.saveInvoice(data)
             .then(res => {
                 if (res.success) {
+                    if (res.billPrintRequired) {
+                        if (boundAddress === undefined) {
+                            setPrinterFindVisible(true)
+                        } else {
+                            printBill();
+                        }
+                        setPrintSize(res.printerSize);
+                        setPrintObject(res.content);
+                    }
+                    setBillPrintRequired(res.billPrintRequired);
                     commonFunc.notifyMessage('Invoice saved successfully!', 1);
                     setGroupList([]);
                     setTotalAmount(null);
@@ -336,6 +455,150 @@ const HomeBase = ({navigation}) => {
             default:
                 break;
         }
+    }
+
+    const _connectPrinter = (printer) => {
+        //connect printer
+        setIsConnecting(true);
+        // BLEPrinter.connectPrinter(printer.inner_mac_address)
+        //     .then(res => {
+        //         console.log(res)
+        //         setCurrentPrinter(res);
+        //         setPrinterFindVisible(false);
+        //         setIsConnecting(false);
+        //         commonFunc.notifyMessage('Printer Connect Successfully!', 1);
+        //
+        //         setTimeout(() => {
+        //             printBill();
+        //         }, 1000)
+        //
+        //     })
+        //     .catch(err => {
+        //         console.log(err);
+        //         setIsConnecting(false);
+        //         commonFunc.notifyMessage('Printer Connect Failed!', 0)
+        //     })
+
+        BluetoothManager.connect(printer.address)
+            .then(
+                (s) => {
+                    console.log('Connect status:::::::::::::::::::::::::' + JSON.stringify(s))
+                    setBoundAddress(printer.address)
+                    setPrinterFindVisible(false);
+                    setIsConnecting(false);
+                    commonFunc.notifyMessage('Printer Connect Successfully!', 1);
+                    printBill();
+                },
+                (e) => {
+                    console.log(e);
+                    setIsConnecting(false);
+                    commonFunc.notifyMessage('Printer Connect Failed!', 0)
+                }
+            );
+    }
+
+    const printBill =  () => {
+        // BLEPrinter.printBill("<C>User Name : Kavinda dilshan</C>");
+        // BLEPrinter.printBill("<C>User Name : Kavinda dilshan</C>");
+
+        // await BluetoothEscposPrinter.printText('text printer', {
+        //     encoding: "Cp857", // This is Turkish encoding. If you want to print English characters, you don't need to set this option.
+        //     codepage: 13, // This is Turkish codepage. If you want to print English characters, you don't need to set this option.
+        //     fonttype: 0, // This is default font type.
+        //     widthtimes: 0, // Text width times
+        //     heigthtimes: 0, // Text heigth time
+        // });
+
+         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
+        // await BluetoothEscposPrinter.setBlob(0);
+         BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r\n\r`, {
+            encoding: "GBK",
+            codepage: 0,
+            widthtimes: 1,
+            heigthtimes: 1,
+            fonttype: 1,
+        });
+        // await BluetoothEscposPrinter.setBlob(0);
+         BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
+            encoding: "GBK",
+            codepage: 0,
+            widthtimes: 0,
+            heigthtimes: 0,
+            fonttype: 1,
+        });
+
+         BluetoothEscposPrinter.printText(" \n\r", {});
+
+         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+         BluetoothEscposPrinter.printText(`Invoice No: ${printObject.invoiceNo}\n\r`, {});
+         BluetoothEscposPrinter.printText(`Order Date: ${printObject.orderDate}\n\r`, {});
+         BluetoothEscposPrinter.printText(`Customer Name: ${printObject.customerName}\n\r`, {});
+         BluetoothEscposPrinter.printText(
+            "------------------------------------------------\n\r",
+            {}
+        );
+
+        let columnWidths = [7, 17, 12, 12];
+        // setTimeout(async () => {
+            {
+                printObject.invoiceBillRecordGroups.map((items, i) => {
+
+                     BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
+                     BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                     BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r\n\r`, {});
+
+                     BluetoothEscposPrinter.printColumn(columnWidths,
+                        [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "Circumference", "Cubic Feet", "Amount"], {}
+                    )
+                    // setTimeout(async () => {
+                        {
+                            items.records.map( (item, j) => {
+
+                                 BluetoothEscposPrinter.printColumn(columnWidths,
+                                    [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}`, `${item.circumference}`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
+                                )
+
+                            })
+                        }
+                    // }, 500)
+
+
+                })
+            }
+        // }, 1000)
+
+        setTimeout( () => {
+             BluetoothEscposPrinter.printText(
+                "------------------------------------------------\n\r\n\r",
+                {}
+            );
+
+            let bottomColumnWidth = [20, 20]
+             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount}`], {}
+            )
+             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount}`], {}
+            )
+             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount}`], {}
+            )
+             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid}`], {}
+            )
+             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid}`], {}
+            )
+
+             BluetoothEscposPrinter.printText(" \n\r", {});
+
+             BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
+             BluetoothEscposPrinter.printText("Thank you and come again!\n\r", {});
+             BluetoothEscposPrinter.printText("Software by @ CodeLogicIT Solutions\n\r", {});
+             BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r\n\r", {});
+             BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+        }, 5000)
+
     }
 
 
@@ -734,10 +997,15 @@ const HomeBase = ({navigation}) => {
 
                     ))}
 
+                    <TouchableOpacity onPress={() => printBill()}>
+                        <Text>Print</Text>
+                    </TouchableOpacity>
 
                 </View>
+
             </ScrollView>
             <Loading isVisible={loading}/>
+            <Connecting isVisible={isConnecting}/>
             <AlertMessage
                 show={showAlert}
                 title={"Do you want to edit wood cost?"}
@@ -791,6 +1059,40 @@ const HomeBase = ({navigation}) => {
                     />
                 </Card>
             </Overlay>
+
+            <Overlay
+                isVisible={printerFindVisible}
+                overlayStyle={styles.overlay}
+                onBackdropPress={() => setPrinterFindVisible(!printerFindVisible)}>
+                <Card containerStyle={styles.overlayCard}>
+                    <Card.Title style={{fontSize: 17}}>
+                        Select Printer | මුද්‍රණ යන්ත්‍රය තෝරගන්න
+                    </Card.Title>
+                    <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+
+                    {
+                        printers.map((printer, i) => (
+                            <View style={[styles.cardItemConatiner, {marginBottom: 10}]} key={i}>
+                                <TouchableOpacity style={styles.deviceContainer}
+                                                  onPress={() => _connectPrinter(printer)}>
+                                    <View style={{flexDirection: 'column',}}>
+                                        <View style={{flexDirection: 'row',}}>
+                                            <Text style={styles.deviceNameStyle}>Device Name:</Text>
+                                            <Text style={styles.deviceSubTitle}>{printer.name}</Text>
+                                        </View>
+                                        <View style={{flexDirection: 'row',}}>
+                                            <Text style={styles.deviceNameStyle}>Device Mac :</Text>
+                                            <Text style={styles.deviceSubTitle}>{printer.address}</Text>
+                                        </View>
+                                    </View>
+
+                                </TouchableOpacity>
+                            </View>
+                        ))
+                    }
+                </Card>
+            </Overlay>
+
             <AlertMessage
                 show={showAlert2}
                 title={"Do you want to logout?"}
@@ -956,6 +1258,23 @@ const styles = StyleSheet.create({
         borderWidth: 0,
         width: '100%'
     },
+    deviceContainer: {
+        backgroundColor: Constants.COLORS.WHITE,
+        width: '100%',
+        paddingVertical: 10,
+        borderRadius: 10,
+        // justifyContent:'space-between',
+        paddingHorizontal: 5,
+        flex: 1
+    },
+    deviceNameStyle: {
+        color: Constants.COLORS.BLACK,
+        fontWeight: 'bold'
+    },
+    deviceSubTitle: {
+        marginLeft: 5,
+        color: Constants.COLORS.ICON_ASH
+    }
 });
 
 export default HomeBase;
