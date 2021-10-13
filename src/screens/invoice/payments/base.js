@@ -1,6 +1,6 @@
 import React, {Component, useEffect, useState} from 'react';
-import {ScrollView, StyleSheet, Text, View} from "react-native";
-import {Button, Card, Divider, Input} from "react-native-elements";
+import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Button, Card, Divider, Input, Overlay} from "react-native-elements";
 import * as Constants from "../../../utils/constants";
 import IconI from "react-native-vector-icons/Ionicons";
 import * as Constance from "../../../utils/constants";
@@ -9,8 +9,12 @@ import * as InvoiceServices from "../../../services/invoice";
 import * as commonFunc from "../../../utils/commonFunc";
 import Loading from "../../../components/loading";
 import AlertMessage from "../../../components/AlertMessage";
+import * as actionTypes from "../../../store/actions";
+import {connect} from "react-redux";
+import Connecting from "../../../components/connecting";
+import {BluetoothEscposPrinter, BluetoothManager} from "tp-react-native-bluetooth-printer";
 
-const PayList = ({navigation, route}) => {
+const PayList = ({navigation, route,devicePairHandler, pairedDevices, asDeviceConnect, setDeviceConnectStatus, saveConnectedDeviceAddress, deviceAddress}) => {
     const [payList, setPayList] = useState([]);
     const [totalAmount, setTotalAmount] = useState('');
     const [payableAmount, setPayableAmount] = useState('');
@@ -21,6 +25,9 @@ const PayList = ({navigation, route}) => {
     const [payAmount, setPayAmount] = useState();
     const [status, setStatus] = useState('');
     const [discount, setDiscount] = useState('');
+    const [printerFindVisible, setPrinterFindVisible] = useState(false);
+    const [printObject, setPrintObject] = useState({});
+    const [isConnecting, setIsConnecting] = useState(false);
 
     useEffect(async () => {
         setLoading(true);
@@ -83,9 +90,16 @@ const PayList = ({navigation, route}) => {
         setLoading(true)
         await InvoiceServices.invoicePay(invoiceId, data)
             .then(async response => {
-                setPayAmount('');
-                setLoading(false);
                 if (response.success) {
+                    if (response.billPrintRequired) {
+                        setPrintObject(response.content);
+                        if (asDeviceConnect){
+                            printBill(response.content)
+                        }else {
+                            setPrinterFindVisible(true)
+                        }
+                    }
+                    setPayAmount('');
                     commonFunc.notifyMessage('Payment record added successfully', 1);
                     await getPayList(invoiceId);
                 } else {
@@ -93,15 +107,130 @@ const PayList = ({navigation, route}) => {
                 }
             })
             .catch(error => {
-                setLoading(false)
                 commonFunc.notifyMessage('You connection was interrupted', 0);
             })
+        setLoading(false);
     }
 
     const onTextChange = (val) => {
         const discountedPrice = totalAmount - val;
         setPayableAmount(discountedPrice);
         setDiscount(val)
+    }
+
+    const printBill=(printObject)=>{
+        BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
+        // await BluetoothEscposPrinter.setBlob(0);
+        BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r\n\r`, {
+            encoding: "GBK",
+            codepage: 0,
+            widthtimes: 1,
+            heigthtimes: 1,
+            fonttype: 1,
+        });
+        // await BluetoothEscposPrinter.setBlob(0);
+        BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
+            encoding: "GBK",
+            codepage: 0,
+            widthtimes: 0,
+            heigthtimes: 0,
+            fonttype: 1,
+        });
+
+        BluetoothEscposPrinter.printText(" \n\r", {});
+
+        BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+        BluetoothEscposPrinter.printText(`Invoice No: ${printObject.invoiceNo}\n\r`, {});
+        BluetoothEscposPrinter.printText(`Order Date: ${printObject.orderDate}\n\r`, {});
+        BluetoothEscposPrinter.printText(`Customer Name: ${printObject.customerName}\n\r`, {});
+        BluetoothEscposPrinter.printText(
+            "------------------------------------------------\n\r",
+            {}
+        );
+
+        let columnWidths = [7, 17, 12, 12];
+        // setTimeout(async () => {
+        {
+            printObject.invoiceBillRecordGroups.map((items, i) => {
+
+                BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r\n\r`, {});
+
+                BluetoothEscposPrinter.printColumn(columnWidths,
+                    [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "Circumference", "Cubic Feet", "Amount"], {}
+                )
+                // setTimeout(async () => {
+                {
+                    items.records.map( (item, j) => {
+
+                        BluetoothEscposPrinter.printColumn(columnWidths,
+                            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}`, `${item.circumference}`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
+                        )
+
+                    })
+                }
+                // }, 500)
+
+                BluetoothEscposPrinter.printText(
+                    "------------------------------------------------\n\r",
+                    {}
+                );
+
+            })
+        }
+        // }, 1000)
+
+        setTimeout( () => {
+
+            BluetoothEscposPrinter.printText("\n\r", {});
+
+            let bottomColumnWidth = [20, 20]
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount.toFixed(2)}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount.toFixed(2)}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount.toFixed(2)}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid.toFixed(2)}`], {}
+            )
+            BluetoothEscposPrinter.printColumn(bottomColumnWidth,
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid.toFixed(2)}`], {}
+            )
+
+            BluetoothEscposPrinter.printText(" \n\r", {});
+
+            BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
+            BluetoothEscposPrinter.printText("Thank you and come again!\n\r", {});
+            BluetoothEscposPrinter.printText("Software by @ CodeLogicIT Solutions\n\r", {});
+            BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r\n\r", {});
+            BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+        }, 5000)
+    }
+
+    const _connectPrinter=(printer)=>{
+        setIsConnecting(true);
+        BluetoothManager.connect(printer.address)
+            .then(
+                (s) => {
+                    console.log('Connect status:::::::::::::::::::::::::' + JSON.stringify(s))
+                    setPrinterFindVisible(false);
+                    setIsConnecting(false);
+                    setDeviceConnectStatus(true);
+                    saveConnectedDeviceAddress(printer.address)
+                    commonFunc.notifyMessage('Printer Connect Successfully!', 1);
+                    printBill(printObject);
+                },
+                (e) => {
+                    console.log(e);
+                    setIsConnecting(false);
+                    commonFunc.notifyMessage('Printer Connect Failed!', 0)
+                }
+            );
     }
 
     return (
@@ -126,7 +255,7 @@ const PayList = ({navigation, route}) => {
                         />
                     </View>
 
-                    {status !== 'ACTIVE' && (
+                    {status !== 'ACTIVE' && !route.params.asApproved &&(
                         <View style={[styles.cardItemConatiner, {marginBottom: 10}]}>
                             <View>
                                 <Text>Discount</Text>
@@ -235,7 +364,42 @@ const PayList = ({navigation, route}) => {
 
                 </Card>
             </ScrollView>
+
+            <Overlay
+                isVisible={printerFindVisible}
+                overlayStyle={styles.overlay}
+                onBackdropPress={() => setPrinterFindVisible(!printerFindVisible)}>
+                <Card containerStyle={styles.overlayCard}>
+                    <Card.Title style={{fontSize: 17}}>
+                        Select Printer | මුද්‍රණ යන්ත්‍රය තෝරගන්න
+                    </Card.Title>
+                    <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
+
+                    {
+                        pairedDevices.map((printer, i) => (
+                            <View style={[styles.cardItemConatiner, {marginBottom: 10}]} key={i}>
+                                <TouchableOpacity style={styles.deviceContainer}
+                                                  onPress={() => _connectPrinter(printer)}>
+                                    <View style={{flexDirection: 'column',}}>
+                                        <View style={{flexDirection: 'row',}}>
+                                            <Text style={styles.deviceNameStyle}>Device Name:</Text>
+                                            <Text style={styles.deviceSubTitle}>{printer.name}</Text>
+                                        </View>
+                                        <View style={{flexDirection: 'row',}}>
+                                            <Text style={styles.deviceNameStyle}>Device Mac :</Text>
+                                            <Text style={styles.deviceSubTitle}>{printer.address}</Text>
+                                        </View>
+                                    </View>
+
+                                </TouchableOpacity>
+                            </View>
+                        ))
+                    }
+                </Card>
+            </Overlay>
+
             <Loading isVisible={loading}/>
+            <Connecting isVisible={isConnecting}/>
             <AlertMessage
                 show={showAlert}
                 title={"Do you want to delete this record?"}
@@ -352,6 +516,50 @@ const styles = StyleSheet.create({
     buttonTitleStyle: {
         fontSize: 20,
     },
+    deviceContainer: {
+        backgroundColor: Constants.COLORS.WHITE,
+        width: '100%',
+        paddingVertical: 10,
+        borderRadius: 10,
+        // justifyContent:'space-between',
+        paddingHorizontal: 5,
+        flex: 1
+    },
+    deviceNameStyle: {
+        color: Constants.COLORS.BLACK,
+        fontWeight: 'bold'
+    },
+    deviceSubTitle: {
+        marginLeft: 5,
+        color: Constants.COLORS.ICON_ASH
+    },
+    overlayCard: {
+        borderRadius: 10,
+        backgroundColor: Constants.COLORS.BACKGROUND_GREEN,
+        borderWidth: 0,
+        marginBottom: 15,
+    },
+    overlay: {
+        borderRadius: 10,
+        backgroundColor: 'transparent',
+        shadowColor: 'transparent',
+        borderWidth: 0,
+        width: '100%'
+    },
 })
 
-export default PayList;
+const mapStateToProps = (state) => ({
+    pairedDevices: state.user.pairedDevices,
+    asDeviceConnect: state.user.asDeviceConnect,
+    deviceAddress: state.user.deviceAddress,
+});
+
+const mapDispatchToProps = dispatch => {
+    return {
+        devicePairHandler: pairedDevices => dispatch(actionTypes.devicePairHandler(pairedDevices)),
+        setDeviceConnectStatus: asDeviceConnect => dispatch(actionTypes.setDeviceConnectStatus(asDeviceConnect)),
+        saveConnectedDeviceAddress: deviceAddress => dispatch(actionTypes.saveConnectedDeviceAddress(deviceAddress))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(PayList);

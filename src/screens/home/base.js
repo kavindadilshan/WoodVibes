@@ -134,9 +134,7 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
         BluetoothManager.isBluetoothEnabled().then(
             (enabled) => {
                 console.log('isBLE Enabled::::::::::::::::::::::::' + enabled); // enabled ==> true /false
-                if (enabled) {
-                    bluetoothEnableFunc()
-                }
+                bluetoothEnableFunc()
             },
             (err) => {
                 console.log(err);
@@ -220,8 +218,8 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
                 woodMeasurementCostId: item.woodMeasurementCostId,
                 cubicFeet: Number(item.cubicQuantity),
                 amount: Number(item.totalAmount),
-                length: Number(length),
-                circumference: Number(circumference),
+                length: Number(item.length),
+                circumference: Number(item.circumference),
             })
         })
 
@@ -243,13 +241,13 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
             .then(res => {
                 if (res.success) {
                     if (res.billPrintRequired) {
-                        if (boundAddress === undefined) {
-                            setPrinterFindVisible(true)
-                        } else {
-                            printBill();
-                        }
                         setPrintSize(res.printerSize);
                         setPrintObject(res.content);
+                        if (asDeviceConnect){
+                            printBill(res.content)
+                        }else {
+                            setPrinterFindVisible(true)
+                        }
                     }
                     setBillPrintRequired(res.billPrintRequired);
                     commonFunc.notifyMessage('Invoice saved successfully!', 1);
@@ -343,7 +341,8 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
 
         setGroupList(groupArrays);
 
-        console.log(groupArrays);
+        setLength('');
+        setCircumference('');
     };
 
     const profileOnPress = async () => {
@@ -492,7 +491,7 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
                     setDeviceConnectStatus(true);
                     saveConnectedDeviceAddress(printer.address)
                     commonFunc.notifyMessage('Printer Connect Successfully!', 1);
-                    printBill();
+                    printBill(printObject);
                 },
                 (e) => {
                     console.log(e);
@@ -502,7 +501,7 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
             );
     }
 
-    const printBill =  () => {
+    const printBill =  (printObject) => {
         // BLEPrinter.printBill("<C>User Name : Kavinda dilshan</C>");
         // BLEPrinter.printBill("<C>User Name : Kavinda dilshan</C>");
 
@@ -567,32 +566,34 @@ const HomeBase = ({navigation,devicePairHandler,pairedDevices,asDeviceConnect,se
                         }
                     // }, 500)
 
+                    BluetoothEscposPrinter.printText(
+                        "------------------------------------------------\n\r",
+                        {}
+                    );
 
                 })
             }
         // }, 1000)
 
         setTimeout( () => {
-             BluetoothEscposPrinter.printText(
-                "------------------------------------------------\n\r\n\r",
-                {}
-            );
+
+            BluetoothEscposPrinter.printText("\n\r", {});
 
             let bottomColumnWidth = [20, 20]
              BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount.toFixed(2)}`], {}
             )
              BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount.toFixed(2)}`], {}
             )
              BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount.toFixed(2)}`], {}
             )
              BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid.toFixed(2)}`], {}
             )
              BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid.toFixed(2)}`], {}
             )
 
              BluetoothEscposPrinter.printText(" \n\r", {});

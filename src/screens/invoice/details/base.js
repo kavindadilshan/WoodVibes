@@ -50,11 +50,16 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
     async function getInvoiceById(invoiceId) {
         await InvoiceServices.getInvoiceById(invoiceId)
             .then(response => {
-                setCustomerName(response.customerName);
-                setTotalAmount(response.totalAmount.toFixed(2));
-                setDiscountAmount(response.discount.toFixed(2));
-                setPayableAmount(response.toPaidAmount.toFixed(2));
-                groupBy(response.invoiceDetails);
+                if (response.success) {
+                    setCustomerName(response.customerName);
+                    setTotalAmount(response.totalAmount.toFixed(2));
+                    setDiscountAmount(response.discount.toFixed(2));
+                    setPayableAmount(response.toPaidAmount.toFixed(2));
+                    groupBy(response.invoiceDetails);
+                } else {
+                    commonFunc.notifyMessage(response.message, response.status);
+                }
+
             })
             .catch(error => {
                 commonFunc.notifyMessage('You connection was interrupted', 0);
@@ -90,7 +95,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
     const headerRightBtn = (
         <Button
             title="Pay List"
-            onPress={() => navigation.navigate('PayList', {invoiceId: invoiceId})}
+            onPress={() => navigation.navigate('PayList', {invoiceId: invoiceId,asApproved:asApproved})}
             containerStyle={styles.addNewButtonContainerStyle}
             buttonStyle={styles.addNewButtonStyle}
             titleStyle={styles.addNewButtonTitleStyle}
@@ -103,17 +108,12 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
             .then(res => {
                 if (res.success) {
                     if (res.billPrintRequired) {
-                        // if (boundAddress === undefined) {
-                        //     setPrinterFindVisible(true)
-                        // } else {
-                        //     printBill();
-                        // }
-                        if (asDeviceConnect){
-                            printBill()
-                        }else {
+                        setPrintObject(res.content);
+                        if (asDeviceConnect) {
+                            printBill(res.content)
+                        } else {
                             setPrinterFindVisible(true)
                         }
-                        setPrintObject(res.content);
                     }
                     setBillPrintRequired(res.billPrintRequired);
                 } else {
@@ -126,7 +126,8 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
         setLoading(false);
     }
 
-    const printBill=()=>{
+    const printBill = (printObject) => {
+
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
         // await BluetoothEscposPrinter.setBlob(0);
         BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r\n\r`, {
@@ -170,7 +171,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
                 )
                 // setTimeout(async () => {
                 {
-                    items.records.map( (item, j) => {
+                    items.records.map((item, j) => {
 
                         BluetoothEscposPrinter.printColumn(columnWidths,
                             [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}`, `${item.circumference}`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
@@ -180,32 +181,34 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
                 }
                 // }, 500)
 
+                BluetoothEscposPrinter.printText(
+                    "------------------------------------------------\n\r",
+                    {}
+                );
 
             })
         }
         // }, 1000)
 
-        setTimeout( () => {
-            BluetoothEscposPrinter.printText(
-                "------------------------------------------------\n\r\n\r",
-                {}
-            );
+        setTimeout(() => {
+
+            BluetoothEscposPrinter.printText("\n\r", {});
 
             let bottomColumnWidth = [20, 20]
             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount.toFixed(2)}`], {}
             )
             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount.toFixed(2)}`], {}
             )
             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount.toFixed(2)}`], {}
             )
             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid.toFixed(2)}`], {}
             )
             BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid}`], {}
+                [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid.toFixed(2)}`], {}
             )
 
             BluetoothEscposPrinter.printText(" \n\r", {});
@@ -218,7 +221,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
         }, 5000)
     }
 
-    const _connectPrinter=(printer)=>{
+    const _connectPrinter = (printer) => {
         setIsConnecting(true);
         BluetoothManager.connect(printer.address)
             .then(
@@ -230,7 +233,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
                     setDeviceConnectStatus(true);
                     saveConnectedDeviceAddress(printer.address)
                     commonFunc.notifyMessage('Printer Connect Successfully!', 1);
-                    printBill();
+                    printBill(printObject);
                 },
                 (e) => {
                     console.log(e);
