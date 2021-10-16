@@ -190,7 +190,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
         }
         // }, 1000)
 
-        setTimeout(() => {
+        // setTimeout(() => {
 
             BluetoothEscposPrinter.printText("\n\r", {});
 
@@ -218,7 +218,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
             BluetoothEscposPrinter.printText("Software by @ CodeLogicIT Solutions\n\r", {});
             BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r\n\r", {});
             BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
-        }, 5000)
+        // }, 5000)
     }
 
     const _connectPrinter = (printer) => {

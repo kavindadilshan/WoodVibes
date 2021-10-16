@@ -29,20 +29,19 @@ const AboutBase = ({navigation}) => {
                     </View>
                     <Text style={styles.mainTitle}>{Constants.APP_NAME}</Text>
                     <View style={styles.bodyContainer}>
-                        <Text style={{...styles.title,paddingHorizontal:'5%',paddingTop:'10%'}}>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has
-                            been the industry's standard  text of the printing and typesetting in text of the printing and typesetting in text of the printing and typesetting in.</Text>
+                        <Text style={{...styles.title,paddingHorizontal:'5%',paddingTop:'10%'}}>Woodvibes is a secure billing system mobile application specially build for the wood mills in sri lanka {'\n\n'}Powered by CodeLogic IT Solutions</Text>
                         <View style={styles.icon}>
                             <Avatar
                                 source={Img1}
                                 style={styles.image} resizeMode={'stretch'} rounded={true}/>
                         </View>
-                        <Text style={styles.title}>No 267/2 ,Uyangoda Road {'\n'} Galle ,Sri Lanka</Text>
+                        <Text style={styles.title}>329/C, Ginigala {'\n'} Habaraduwa.</Text>
                         <View style={styles.icon}>
                             <Avatar
                                 source={Img3}
                                 style={styles.image} resizeMode={'stretch'}/>
                         </View>
-                        <Text style={styles.title}>077 6 784 852 / 071 6 784 852</Text>
+                        <Text style={styles.title}>+94 705711303 / +94 741253110</Text>
                         {/*<View style={styles.icon}>*/}
                         {/*    <Avatar*/}
                         {/*        source={Img2}*/}
