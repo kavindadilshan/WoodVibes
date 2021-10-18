@@ -18,7 +18,7 @@ export const COLORS = {
   LABEL_BG:'#BDC3C7'
 };
 export const APP_NAME = 'WoodVibes';
-export const AGENT_CONTACT = '0702177781';
+export const AGENT_CONTACT = '+94 741253110';
 export const CLIENT_NAME = 'admin';
 export const CLIENT_SECRET = '';
 

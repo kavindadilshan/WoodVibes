@@ -103,8 +103,8 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
         navigation.addListener('focus', async () => {
             setRole(await AsyncStorage.getItem(StorageStrings.ROLE));
             await getAllCustomersList();
+            await getWoodTypeLists();
         });
-        await getWoodTypeLists();
 
         //scan ble devices
         // BLEPrinter.init().then((res) => {
@@ -518,13 +518,14 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
     const printSmallSize = (printObject) => {
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
         // await BluetoothEscposPrinter.setBlob(0);
-        BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r\n\r`, {
+        BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r`, {
             encoding: "GBK",
             codepage: 0,
             widthtimes: 1,
             heigthtimes: 1,
             fonttype: 1,
         });
+        BluetoothEscposPrinter.printText("\n\r", {});
         // await BluetoothEscposPrinter.setBlob(0);
         BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
             encoding: "GBK",
@@ -541,56 +542,56 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
         BluetoothEscposPrinter.printText(`Order Date: ${printObject.orderDate}\n\r`, {});
         BluetoothEscposPrinter.printText(`Customer Name: ${printObject.customerName}\n\r`, {});
         BluetoothEscposPrinter.printText(
-            "------------------------------------------------\n\r",
+            "--------------------------------\n\r",
             {}
         );
 
-        let columnWidths = [7, 17, 12, 12];
+        let columnWidths = [7, 6, 7, 11];
         {
             printObject.invoiceBillRecordGroups.map((items, i) => {
 
                 BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
                 BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r`, {});
+                BluetoothEscposPrinter.printText("\n\r", {});
 
                 BluetoothEscposPrinter.printColumn(columnWidths,
-                    [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "Circumference", "Cubic Feet", "Amount"], {}
+                    [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "C.F", "Cubic F.", "Amount"], {}
                 )
                 {
                     items.records.map((item, j) => {
 
                         BluetoothEscposPrinter.printColumn(columnWidths,
-                            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}`, `${item.circumference}`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
+                            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}'`, `${item.circumference}"`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
                         )
 
                     })
                 }
 
                 BluetoothEscposPrinter.printText(
-                    "------------------------------------------------\n\r",
+                    "--------------------------------\n\r",
                     {}
                 );
 
             })
         }
 
-        BluetoothEscposPrinter.printText("\n\r", {});
 
-        let bottomColumnWidth = [20, 20]
+        let bottomColumnWidth = [18, 22]
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount.toFixed(2)}`], {}
+            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER], ["Total Amount  :", `Rs.${printObject.totalAmount.toFixed(2)}`], {}
         )
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount.toFixed(2)}`], {}
+            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER], ["Discount      :", `Rs.${printObject.discount.toFixed(2)}`], {}
         )
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount.toFixed(2)}`], {}
+            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER], ["Amount        :", `Rs.${printObject.amount.toFixed(2)}`], {}
         )
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid.toFixed(2)}`], {}
+            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid.toFixed(2)}`], {}
         )
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid.toFixed(2)}`], {}
+            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid.toFixed(2)}`], {}
         )
 
         BluetoothEscposPrinter.printText(" \n\r", {});
@@ -598,21 +599,23 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
         BluetoothEscposPrinter.printText("Thank you and come again!\n\r", {});
         BluetoothEscposPrinter.printText("Software by @ CodeLogicIT Solutions\n\r", {});
-        BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r\n\r", {});
+        BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r", {});
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
+
 
     }
 
     const printMediumSize = (printObject) => {
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
         // await BluetoothEscposPrinter.setBlob(0);
-        BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r\n\r`, {
+        BluetoothEscposPrinter.printText(`${printObject.factoryName}\n\r`, {
             encoding: "GBK",
             codepage: 0,
             widthtimes: 1,
             heigthtimes: 1,
             fonttype: 1,
         });
+        BluetoothEscposPrinter.printText("\n\r", {});
         // await BluetoothEscposPrinter.setBlob(0);
         BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
             encoding: "GBK",
@@ -648,7 +651,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                     items.records.map((item, j) => {
 
                         BluetoothEscposPrinter.printColumn(columnWidths,
-                            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}`, `${item.circumference}`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
+                            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], [`${item.length}'`, `${item.circumference}"`, `${item.cubicFeet}`, `Rs.${item.amount.toFixed(2)}`], {}
                         )
 
                     })
@@ -664,7 +667,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
 
         BluetoothEscposPrinter.printText("\n\r", {});
 
-        let bottomColumnWidth = [20, 20]
+        let bottomColumnWidth = [20, 25]
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
             [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Total Amount  :", `Rs.${printObject.totalAmount.toFixed(2)}`], {}
         )
@@ -672,7 +675,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
             [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Discount      :", `Rs.${printObject.discount.toFixed(2)}`], {}
         )
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
-            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount:", `Rs.${printObject.amount.toFixed(2)}`], {}
+            [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Amount        :", `Rs.${printObject.amount.toFixed(2)}`], {}
         )
         BluetoothEscposPrinter.printColumn(bottomColumnWidth,
             [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.RIGHT], ["Payable Amount:", `Rs.${printObject.totalAmountToPaid.toFixed(2)}`], {}
@@ -688,7 +691,6 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
         BluetoothEscposPrinter.printText("Software by @ CodeLogicIT Solutions\n\r", {});
         BluetoothEscposPrinter.printText("T.P 074-1253110\n\r\n\r\n\r\n\r", {});
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
-
     }
 
 
