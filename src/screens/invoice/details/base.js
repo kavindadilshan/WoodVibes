@@ -153,7 +153,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
             heigthtimes: 1,
             fonttype: 1,
         });
-        BluetoothEscposPrinter.printText("\n\r", {});
+        // BluetoothEscposPrinter.printText("\n\r", {});
         // await BluetoothEscposPrinter.setBlob(0);
         BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
             encoding: "GBK",
@@ -163,7 +163,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
             fonttype: 1,
         });
 
-        BluetoothEscposPrinter.printText(" \n\r", {});
+        // BluetoothEscposPrinter.printText(" \n\r", {});
 
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
         BluetoothEscposPrinter.printText(`Invoice No: ${printObject.invoiceNo}\n\r`, {});
@@ -178,10 +178,11 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
         {
             printObject.invoiceBillRecordGroups.map((items, i) => {
 
-                BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r`, {});
-                BluetoothEscposPrinter.printText("\n\r", {});
+                BluetoothEscposPrinter.printText(`Wood Type       : ${items.woodType}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Unit Cost       : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count      : ${items.itemCount}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Total Cubic Feet: ${items.totalCubicFeet}\n\r`, {});
+                // BluetoothEscposPrinter.printText("\n\r", {});
 
                 BluetoothEscposPrinter.printColumn(columnWidths,
                     [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "C.F", "Cubic F.", "Amount"], {}
@@ -222,7 +223,7 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
             [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER], ["Paid Amount   :", `Rs.${printObject.totalAmountPaid.toFixed(2)}`], {}
         )
 
-        BluetoothEscposPrinter.printText(" \n\r", {});
+        // BluetoothEscposPrinter.printText(" \n\r", {});
 
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER);
         BluetoothEscposPrinter.printText("Thank you and come again!\n\r", {});
@@ -267,9 +268,10 @@ const InvoiceDetailsBase = ({navigation, route, devicePairHandler, pairedDevices
         {
             printObject.invoiceBillRecordGroups.map((items, i) => {
 
-                BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r\n\r`, {});
+                BluetoothEscposPrinter.printText(`Wood Type       : ${items.woodType}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Unit Cost       : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count      : ${items.itemCount}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Total Cubic Feet: ${items.totalCubicFeet}\n\r`, {});
 
                 BluetoothEscposPrinter.printColumn(columnWidths,
                     [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "Circumference", "Cubic Feet", "Amount"], {}

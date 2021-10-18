@@ -29,22 +29,36 @@ const DropDown = (props) => {
                 itemTextStyle={{color: '#222'}}
                 itemsContainerStyle={{zIndex: 1, maxHeight: screenHeight / 100 * 20, paddingBottom: 5}}
                 items={props.items}
-                defaultIndex={2}
                 resetValue={false}
                 textInputProps={
+                    props.reset?
                     {
                         placeholder: props.placeholder,
-                        placeholderTextColor:Constants.COLORS.ICON_ASH,
+                        placeholderTextColor: Constants.COLORS.ICON_ASH,
                         underlineColorAndroid: "transparent",
                         style: {
                             padding: 12,
                             borderRadius: 5,
                             height: 45,
                             backgroundColor: Constants.COLORS.WHITE,
-                            color:Constants.COLORS.BLACK
+                            color: Constants.COLORS.BLACK
                         },
-                        // onTextChange: text => this.state.text
+                        onTextChange: props.onChange,
+                        value: props.value
                     }
+                    :
+                        {
+                            placeholder: props.placeholder,
+                            placeholderTextColor: Constants.COLORS.ICON_ASH,
+                            underlineColorAndroid: "transparent",
+                            style: {
+                                padding: 12,
+                                borderRadius: 5,
+                                height: 45,
+                                backgroundColor: Constants.COLORS.WHITE,
+                                color: Constants.COLORS.BLACK
+                            },
+                        }
                 }
                 listProps={
                     {

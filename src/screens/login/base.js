@@ -159,6 +159,7 @@ const LoginBase = ({navigation}) => {
                                     }}
                                     items={factoryList}
                                     placeholder={"Select Factory"}
+                                    reset={false}
                                 />
                             </View>
 

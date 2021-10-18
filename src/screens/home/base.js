@@ -1,5 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {DeviceEventEmitter, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+    DeviceEventEmitter,
+    Dimensions,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import IconI from 'react-native-vector-icons/Ionicons';
 import {Button, Card, Divider, Input, Overlay} from 'react-native-elements';
 
@@ -23,6 +32,7 @@ import Connecting from '../../components/connecting';
 import {BluetoothEscposPrinter, BluetoothManager, BluetoothTscPrinter} from "tp-react-native-bluetooth-printer";
 import {connect} from "react-redux";
 import * as actionTypes from '../../store/actions';
+import ResetIMG from '../../resources/images/reset.png'
 
 interface IBLEPrinter {
     device_name: string;
@@ -98,6 +108,10 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
     const [printObject, setPrintObject] = useState({});
     const [isConnecting, setIsConnecting] = useState(false);
     const [boundAddress, setBoundAddress] = useState();
+    const [reset, setReset] = useState(false);
+    const [reset2, setReset2] = useState(false);
+    const [customerText, setCustomerText] = useState('');
+    const [woodText, setWoodText] = useState('');
 
     useEffect(async () => {
         navigation.addListener('focus', async () => {
@@ -273,9 +287,9 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
     }
 
     const addOnPress = () => {
-        if (selectedCustomerId === undefined) {
+        if (selectedCustomerId === undefined || selectedCustomerId === '') {
             commonFunc.notifyMessage('Please Select Customer', 2);
-        } else if (selectedWoodCost === undefined) {
+        } else if (selectedWoodCost === undefined || selectedWoodCost === '') {
             commonFunc.notifyMessage('Please Select Wood Type', 2);
         } else if (length === undefined || length === '') {
             commonFunc.notifyMessage('Please Enter Length', 2);
@@ -525,7 +539,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
             heigthtimes: 1,
             fonttype: 1,
         });
-        BluetoothEscposPrinter.printText("\n\r", {});
+        // BluetoothEscposPrinter.printText("\n\r", {});
         // await BluetoothEscposPrinter.setBlob(0);
         BluetoothEscposPrinter.printText(`T.P :- ${printObject.factoryContact}\n\r`, {
             encoding: "GBK",
@@ -535,7 +549,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
             fonttype: 1,
         });
 
-        BluetoothEscposPrinter.printText(" \n\r", {});
+        // BluetoothEscposPrinter.printText(" \n\r", {});
 
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
         BluetoothEscposPrinter.printText(`Invoice No: ${printObject.invoiceNo}\n\r`, {});
@@ -546,14 +560,15 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
             {}
         );
 
-        let columnWidths = [7, 6, 7, 11];
+        let columnWidths = [7, 6, 7, 12];
         {
             printObject.invoiceBillRecordGroups.map((items, i) => {
 
-                BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r`, {});
-                BluetoothEscposPrinter.printText("\n\r", {});
+                BluetoothEscposPrinter.printText(`Wood Type       : ${items.woodType}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Unit Cost       : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count      : ${items.itemCount}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Total Cubic Feet: ${items.totalCubicFeet}\n\r`, {});
+                // BluetoothEscposPrinter.printText("\n\r", {});
 
                 BluetoothEscposPrinter.printColumn(columnWidths,
                     [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "C.F", "Cubic F.", "Amount"], {}
@@ -640,9 +655,10 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
         {
             printObject.invoiceBillRecordGroups.map((items, i) => {
 
-                BluetoothEscposPrinter.printText(`Wood Type : ${items.woodType}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Unit Cost : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
-                BluetoothEscposPrinter.printText(`Item Count: ${items.itemCount}\n\r\n\r`, {});
+                BluetoothEscposPrinter.printText(`Wood Type       : ${items.woodType}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Unit Cost       : Rs.${(items.unitCost).toFixed(2)}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Item Count      : ${items.itemCount}\n\r`, {});
+                BluetoothEscposPrinter.printText(`Total Cubic Feet: ${items.totalCubicFeet}\n\r`, {});
 
                 BluetoothEscposPrinter.printColumn(columnWidths,
                     [BluetoothEscposPrinter.ALIGN.LEFT, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.CENTER, BluetoothEscposPrinter.ALIGN.RIGHT], ["Length", "Circumference", "Cubic Feet", "Amount"], {}
@@ -693,6 +709,36 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
         BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT);
     }
 
+    const onClearStates = async () => {
+        setReset(true);
+        setReset2(true)
+        setSelectedWoodTypeId('');
+        setSelectedWoodDetails({});
+        setLength('');
+        setCircumference('');
+        setTotalAmount('');
+        setDiscount('');
+        setNetAmount('');
+        setPayAmount('');
+        setEditable(false);
+        setAddingList([]);
+        setLoading(false);
+        setTableLoading(false);
+        setSelectedCustomerId('');
+        setAsChanged(false);
+        setGroupList([]);
+        setVisible(false);
+        setVisibleIndex('');
+        setShowAlert(false);
+        setShowAlert2(false);
+        setEditCostVisible(false);
+        setNewCost('');
+        setSelectedCustomerList([]);
+        setSelectedWoodTypeList([]);
+        setSelectedWoodCost('');
+        setCustomerText('');
+        setWoodText('');
+    }
 
     return (
         <View style={{flexGrow: 1}}>
@@ -722,7 +768,16 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                         <ScrollView contentContainerStyle={{paddingBottom: 10}} nestedScrollEnabled={true}
                                     keyboardShouldPersistTaps="handled">
                             <Card containerStyle={styles.orderCard}>
-                                <Card.Title style={{fontSize: 18}}>New order | නව ඇණවුම්</Card.Title>
+                                <Card.Title style={{fontSize: 18, alignItems: 'center'}}>
+                                    New order | නව ඇණවුම්
+
+                                </Card.Title>
+                                <TouchableOpacity
+                                    style={{width: 30, height: 30, right: 10, position: 'absolute', top: -2}}
+                                    onPress={() => onClearStates()}
+                                >
+                                    <Image source={ResetIMG} style={{width: '100%', height: '100%'}}/>
+                                </TouchableOpacity>
                                 <Card.Divider style={{backgroundColor: Constants.COLORS.BLACK}}/>
                                 <View style={styles.cardItemConatiner}>
                                     <View>
@@ -746,6 +801,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                                         {/*</Picker>*/}
                                         <DropDown
                                             onItemSelect={(item) => {
+                                                setReset(false);
                                                 setSelectedCustomerId(item.id);
                                                 setSelectedCustomerList(item)
                                                 setEditable(true);
@@ -759,6 +815,9 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                                             }}
                                             items={customerList}
                                             placeholder={"Select Customer"}
+                                            onChange={(text) => setCustomerText(text)}
+                                            value={customerText}
+                                            reset={reset}
                                         />
                                     </View>
                                 </View>
@@ -786,6 +845,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                                         {/*</Picker>*/}
                                         <DropDown
                                             onItemSelect={(item) => {
+                                                setReset2(false);
                                                 setSelectedWoodDetails(woodTypeList.length !== 0 ? item : {});
                                                 setSelectedWoodTypeId(item.id);
                                                 setEditable(true);
@@ -801,6 +861,7 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                                             }}
                                             items={woodTypeList}
                                             placeholder={"Select Wood Type"}
+                                            reset={reset2}
                                         />
                                     </View>
                                 </View>
@@ -1088,8 +1149,8 @@ const HomeBase = ({navigation, devicePairHandler, pairedDevices, asDeviceConnect
                         </View>
 
                     ))}
-                </View>
 
+                </View>
             </ScrollView>
             <Loading isVisible={loading}/>
             <Connecting isVisible={isConnecting}/>
